@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login - Readymade Shop Management</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="auth-wrapper">
+    <div class="auth-card admin-card">
+      <div class="auth-header">
+        <div class="auth-logo">🛡️</div>
+        <h1 class="auth-title">Admin Management Portal</h1>
+        <p class="auth-subtitle">Sign in to manage shop, inventory & cashiers</p>
+        <span class="role-badge admin">ADMIN ACCESS ONLY</span>
+      </div>
+
+      <div id="alertBox" class="alert"></div>
+
+      <form id="adminLoginForm">
+        <div class="form-group">
+          <label for="username">Username or Employee ID</label>
+          <input type="text" id="username" class="form-control" placeholder="Enter admin username" autocomplete="username" required autofocus>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="input-with-icon">
+            <input type="password" id="password" placeholder="Enter admin password" autocomplete="current-password" required>
+            <button type="button" class="toggle-pwd" id="togglePassword" title="Toggle password visibility">👁️</button>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 13px;">
+          <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #475569;">
+            <input type="checkbox" id="rememberMe"> Remember this terminal
+          </label>
+          <a href="#" id="forgotHelp" style="color: #7c3aed; font-size: 12px;">Need help?</a>
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn btn-purple btn-block">
+          Authenticate & Access Dashboard →
+        </button>
+      </form>
+
+      <div class="security-callout">
+        <strong>Security Notice:</strong>
+        All administrative sessions are securely audited. Brute-force protection and progressive rate limiting are actively enforced.
+      </div>
+
+      <div style="margin-top: 20px; text-align: center; font-size: 13px;">
+        <a href="cashier-login.html" style="color: #059669; font-weight: 500;">Switch to Cashier POS Login →</a>
+        <div style="margin-top: 8px;">
+          <a href="index.html" style="color: #64748b; font-size: 12px;">← Return to Main Portal</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/security.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await AppStore.init();
+
+      // Check if already logged in as Admin
+      const currentUser = SecurityEngine.getCurrentUser();
+      if (currentUser && currentUser.role === 'ADMIN') {
+        window.location.href = SecurityEngine.resolvePath('admin/index.html');
+        return;
+      }
+
+      const form = document.getElementById('adminLoginForm');
+      const alertBox = document.getElementById('alertBox');
+      const submitBtn = document.getElementById('submitBtn');
+      const togglePwd = document.getElementById('togglePassword');
+      const pwdInput = document.getElementById('password');
+
+      togglePwd.addEventListener('click', () => {
+        const isPwd = pwdInput.type === 'password';
+        pwdInput.type = isPwd ? 'text' : 'password';
+        togglePwd.textContent = isPwd ? '🔒' : '👁️';
+      });
+
+      document.getElementById('forgotHelp').addEventListener('click', (e) => {
+        e.preventDefault();
+        showAlert('Default Initial Admin Credentials: username "admin", password "Admin@123456"', 'info');
+      });
+
+      function showAlert(msg, type = 'error') {
+        alertBox.className = `alert alert-${type} show`;
+        alertBox.innerHTML = `<span>${type === 'error' ? '⚠️' : 'ℹ️'}</span> <div>${msg}</div>`;
+      }
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        alertBox.className = 'alert';
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Verifying credentials...';
+
+        const username = document.getElementById('username').value.trim();
+        const password = pwdInput.value;
+
+        try {
+          // Strictly authenticate with requested role = 'ADMIN'
+          const result = await AppStore.login(username, password, 'ADMIN');
+          showAlert('Authentication successful. Redirecting to Admin Dashboard...', 'success');
+          setTimeout(() => {
+            window.location.href = SecurityEngine.resolvePath('admin/index.html');
+          }, 600);
+        } catch (err) {
+          showAlert(err.message || 'Invalid username or password.', 'error');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Authenticate & Access Dashboard →';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

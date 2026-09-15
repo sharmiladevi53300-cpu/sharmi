@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Readymade Shop Management System - Secure Portal</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <div class="portal-container">
+    <div style="font-size: 48px; margin-bottom: 12px;">👔👗</div>
+    <h1 class="portal-title" style="color: white;">Readymade Garment Shop System</h1>
+    <p class="portal-subtitle" style="color: #94a3b8;">
+      Enterprise Retail Point-of-Sale & Administration with Strict RBAC Security
+    </p>
+
+    <div class="portal-grid">
+      <!-- Admin Portal Box -->
+      <div class="portal-card admin-portal">
+        <div class="icon-box">🛡️</div>
+        <h2 style="font-size: 20px; margin-bottom: 8px;">Admin Portal</h2>
+        <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">
+          Shop management, inventory catalog, sales reports, audit trails, and <strong>exclusive cashier account registration</strong>.
+        </p>
+        <a href="admin-login.html" class="btn btn-purple btn-block">
+          Admin Sign In →
+        </a>
+        <div style="margin-top: 14px; font-size: 11px; color: #6d28d9; background: #ede9fe; padding: 6px 10px; border-radius: 6px;">
+          Default Admin: <strong>admin</strong> / <strong>Admin@123456</strong>
+        </div>
+      </div>
+
+      <!-- Cashier Portal Box -->
+      <div class="portal-card cashier-portal">
+        <div class="icon-box">💳</div>
+        <h2 style="font-size: 20px; margin-bottom: 8px;">Cashier POS Portal</h2>
+        <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">
+          Fast apparel billing terminal, barcode scanning, size/color variant selection, payment checkout & receipt printing.
+        </p>
+        <a href="cashier-login.html" class="btn btn-emerald btn-block">
+          Cashier Sign In →
+        </a>
+        <div style="margin-top: 14px; font-size: 11px; color: #047857; background: #d1fae5; padding: 6px 10px; border-radius: 6px;">
+          Default Cashier: <strong>cashier1</strong> / <strong>Cashier@123</strong> (or ID: <strong>CSH001</strong>)
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Information Footer -->
+    <div style="margin-top: 40px; background: rgba(30, 41, 59, 0.7); border: 1px solid #334155; border-radius: 12px; padding: 16px 20px; text-align: left; font-size: 12px; color: #94a3b8;">
+      <strong style="color: #cbd5e1; display: block; margin-bottom: 4px;">🔒 Security Policy Enforced:</strong>
+      Cashiers cannot self-register, cannot escalate privileges, and cannot access Admin API routes or configuration. All prices, stock adjustments, and registrations are authorized and calculated server-side.
+    </div>
+  </div>
+
+  <script src="js/security.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    // Initialize default seed data
+    document.addEventListener('DOMContentLoaded', () => {
+      AppStore.init();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Registration - Readymade Clothing Shop</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .panel-grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 20px;
+      padding: 18px 20px;
+    }
+    @media (max-width: 900px) {
+      .panel-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .form-card, .list-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    /* Product Grid Layout */
+    .product-grid-view {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      padding: 10px 0;
+    }
+    .product-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: box-shadow 0.2s, transform 0.2s;
+      position: relative;
+      cursor: context-menu;
+    }
+    .product-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .product-card-img-wrapper {
+      height: 140px;
+      background: #f8fafc;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .product-card-img-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .product-card-body {
+      padding: 12px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .product-card-id {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .product-card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: #0f172a;
+      line-height: 1.3;
+      margin-bottom: 6px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      height: 34px;
+    }
+    .product-card-qty {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .product-card-price {
+      font-weight: 700;
+      font-size: 14px;
+      color: #0f172a;
+    }
+    .product-card-stock {
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .product-card-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-top: 1px solid var(--border);
+      background: #f8fafc;
+    }
+    .card-action-btn {
+      border: none;
+      background: none;
+      padding: 8px 4px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.15s;
+    }
+    .card-action-btn:not(:last-child) {
+      border-right: 1px solid var(--border);
+    }
+    .card-action-btn.edit-btn {
+      color: #2563eb;
+    }
+    .card-action-btn.delete-btn {
+      color: #ef4444;
+    }
+    .card-action-btn:hover {
+      background: #e2e8f0;
+    }
+
+    /* Custom Context Menu */
+    .context-menu {
+      display: none;
+      position: absolute;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-lg);
+      z-index: 2000;
+      width: 180px;
+      padding: 4px 0;
+    }
+    .context-menu-item {
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .context-menu-item:hover {
+      background: #f1f5f9;
+    }
+    .context-menu-item.delete {
+      color: #ef4444;
+      border-top: 1px solid var(--border);
+    }
+    .context-menu-item.delete:hover {
+      background: #fee2e2;
+    }
+  </style>
+</head>
+<body>
+  <div id="inactivityWarning" class="inactivity-bar">
+    ⚠️ Inactivity Notice: You will be automatically logged out in 1 minute. Move your mouse or tap any button to continue.
+  </div>
+
+  <div class="main-wrapper" style="min-height: 100vh;">
+    <!-- Top Header -->
+    <header class="top-navbar" style="background: #0369a1; color: white; border-bottom: none;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="font-size: 24px;">👚</div>
+        <div>
+          <div style="font-weight: 700; font-size: 15px; color: #fff;">Product Registration Panel</div>
+          <div style="font-size: 11px; color: #e0f2fe;">ADMIN CONTROL &bull; CLOTHING INVENTORY REGISTER</div>
+        </div>
+      </div>
+
+      <div class="user-menu">
+        <button class="btn btn-outline btn-sm" onclick="window.location.href='index.html'" style="background:#0284c7; color:#fff; border-color:#bae6fd;">
+          🔙 POS Billing Dashboard
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="window.location.href='bills.html'" style="background:#059669; color:#fff; border-color:#10b981; font-weight:700;">
+          🧾 Bill Management
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="window.location.href='barcode-labels.html'" style="background:#4f46e5; color:#fff; border-color:#818cf8; font-weight:700;">
+          🏷️ Barcode Labels
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="window.location.href='stock-report.html'" style="background:#0891b2; color:#fff; border-color:#06b6d4; font-weight:700;">
+          📈 Stock Valuation & Inward
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="window.location.href='damaged-returns.html'" style="background:#be123c; color:#fff; border-color:#e11d48; font-weight:700;">
+          🚨 Damage & Returns
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="logout()">
+          Sign Out 🚪
+        </button>
+      </div>
+    </header>
+
+    <div class="panel-container">
+      <div id="toastAlert" class="alert"></div>
+
+      <div class="panel-grid">
+        <!-- Left: Registration Form -->
+        <div class="form-card">
+          <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 6px;">Register New Garment</h3>
+          
+          <form id="productRegisterForm">
+            <div id="prdRegAlert" class="alert" style="padding: 8px 10px; font-size:12px; margin-bottom:12px;"></div>
+            
+            <div class="form-group">
+              <label for="regProductId">Product ID *</label>
+              <input type="text" id="regProductId" class="form-control" placeholder="e.g. prd_09 or custom ID" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="regProductName">Product Name *</label>
+              <input type="text" id="regProductName" class="form-control" placeholder="e.g. Premium Linen Shirt" required>
+            </div>
+
+            <div class="form-group">
+              <label for="regProductDesc">Product Description</label>
+              <textarea id="regProductDesc" class="form-control" style="height: 50px; resize: none;" placeholder="Details about size, color, fit..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="regProductImageFile">Product Image (Upload File) *</label>
+              <input type="file" id="regProductImageFile" class="form-control" accept="image/*" required>
+              <input type="hidden" id="regProductImageBase64">
+            </div>
+
+            <div class="form-group">
+              <label for="regProductStock">Product Stock *</label>
+              <input type="number" id="regProductStock" class="form-control" value="10" min="0" required>
+              <input type="hidden" id="regProductQty" value="1 piece">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div class="form-group">
+                <label for="regProductMRP">Product MRP (₹) *</label>
+                <input type="number" step="0.01" id="regProductMRP" class="form-control" placeholder="999" required oninput="calculateRegSellingPrice()">
+              </div>
+              <div class="form-group">
+                <label for="regProductDiscount">Discount (%)</label>
+                <input type="number" step="0.1" id="regProductDiscount" class="form-control" value="0" min="0" max="100" oninput="calculateRegSellingPrice()">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div class="form-group">
+                <label for="regProductSellingPrice">Selling Price (₹) *</label>
+                <input type="number" step="0.01" id="regProductSellingPrice" class="form-control" placeholder="899" required>
+              </div>
+              <div class="form-group">
+                <label for="regProductGST">GST Rate (%)</label>
+                <input type="number" step="1" id="regProductGST" class="form-control" value="5" min="0" required>
+              </div>
+            </div>
+
+            <div class="form-group" style="background: #eef2ff; padding: 12px; border-radius: 8px; border: 1px solid #c7d2fe; margin-bottom: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label for="regProductBarcode" style="margin-bottom: 0; font-weight: 700; color: #3730a3; font-size: 12px;">
+                  🏷️ Product Barcode (Auto-Generated) *
+                </label>
+                <button type="button" class="btn btn-outline btn-sm" onclick="autoGenerateRegBarcode()" style="font-size: 11px; padding: 2px 8px; color: #4338ca; border-color: #a5b4fc; background: white; font-weight: 600;" title="Click to refresh barcode">
+                  🔄 Auto Generate
+                </button>
+              </div>
+              <input type="text" id="regProductBarcode" class="form-control" placeholder="e.g. 8901009" required oninput="updateRegBarcodePreview()" style="font-family: monospace; font-size: 13px; font-weight: 700; letter-spacing: 1px;">
+              
+              <div id="regBarcodePreviewBox" style="margin-top: 8px; padding: 6px 10px; background: white; border-radius: 4px; border: 1px dashed #a5b4fc; display: flex; justify-content: center; align-items: center; min-height: 44px;">
+              </div>
+              <div style="font-size: 10px; color: #4338ca; margin-top: 4px; text-align: center; font-weight: 600;">
+                ⚡ Every new product gets its unique barcode generated automatically
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="regProductCategory">Category</label>
+                <select id="regProductCategory" class="form-control">
+                  <option value="Shirts">Shirts</option>
+                  <option value="T-Shirts">T-Shirts</option>
+                  <option value="Jeans">Jeans</option>
+                  <option value="Trousers">Trousers</option>
+                  <option value="Sarees">Sarees</option>
+                  <option value="Kurtis">Kurtis</option>
+                  <option value="Kids Wear">Kids Wear</option>
+                  <option value="General" selected>General</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="regProductSize">Size / Color Variant</label>
+                <input type="text" id="regProductSize" class="form-control" value="Free Size" placeholder="e.g. M/Blue">
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-emerald btn-block" style="padding: 10px; font-weight: 700;">Save Registered Product</button>
+          </form>
+        </div>
+
+        <!-- Right: Registered Catalog (Box Type Grid View) -->
+        <div class="list-card" style="height: auto; max-height: calc(100vh - 120px); overflow-y: auto;">
+          <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
+            <span>📦 Registered Products Directory</span>
+            <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">💡 Right-click any box to open options menu</span>
+          </h3>
+          <div id="regProductsGrid" class="product-grid-view">
+            <!-- Dynamic box cards injected here -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Context Menu for Product Cards -->
+  <div id="customContextMenu" class="context-menu">
+    <div class="context-menu-item" id="ctxEditBtn">✏️ Edit Product</div>
+    <div class="context-menu-item" id="ctxStockBtn">📦 Adjust Stock</div>
+    <div class="context-menu-item" id="ctxLabelBtn" style="color: #4f46e5; font-weight: 700;">🏷️ Print Barcode Label</div>
+    <div class="context-menu-item delete" id="ctxDeleteBtn">🗑️ Deactivate Product</div>
+  </div>
+
+  <!-- MODAL: EDIT PRODUCT -->
+  <div class="modal-backdrop" id="editProductModal">
+    <div class="modal-box" style="max-width: 460px;">
+      <div class="modal-header">
+        <h3 style="font-size: 16px; font-weight: 700;">✏️ Edit Product Details</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeEditProductModal()">✕</button>
+      </div>
+      <form id="editProductForm">
+        <input type="hidden" id="editProdId">
+        <div class="modal-body" style="max-height: 480px; overflow-y: auto;">
+          <div id="editPrdAlert" class="alert" style="padding: 8px 10px; font-size:12px; margin-bottom:12px;"></div>
+          
+          <div class="form-group">
+            <label for="editProdName">Product Name *</label>
+            <input type="text" id="editProdName" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label for="editProdDesc">Product Description</label>
+            <textarea id="editProdDesc" class="form-control" style="height: 50px; resize: none;"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="editProdImageFile">Product Image (Upload new to replace)</label>
+            <input type="file" id="editProdImageFile" class="form-control" accept="image/*">
+            <input type="hidden" id="editProdImageBase64">
+          </div>
+
+          <div class="form-group" style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <label for="editProdBarcode" style="margin-bottom: 0; font-weight: 700; font-size: 12px;">🏷️ Barcode (Code 128 / Scan) *</label>
+              <button type="button" class="btn btn-outline btn-sm" onclick="autoGenerateEditBarcode()" style="font-size: 10px; padding: 2px 8px; color: #4f46e5; border-color: #c7d2fe; background: white;">⚡ Auto Generate</button>
+            </div>
+            <input type="text" id="editProdBarcode" class="form-control" placeholder="e.g. 8901009" required oninput="updateEditBarcodePreview()" style="font-family: monospace; font-weight: 700;">
+            <div id="editBarcodePreviewBox" style="margin-top: 6px; padding: 4px; background: white; border-radius: 4px; border: 1px dashed #cbd5e1; display: flex; justify-content: center; align-items: center; min-height: 40px;"></div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+              <label for="editProdStock">Product Stock *</label>
+              <input type="number" id="editProdStock" class="form-control" min="0" required>
+              <input type="hidden" id="editProdQty" value="1 piece">
+            </div>
+            <div class="form-group">
+              <label for="editProdGST">GST Rate (%)</label>
+              <input type="number" step="1" id="editProdGST" class="form-control" min="0" required>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+              <label for="editProdMRP">Product MRP (₹) *</label>
+              <input type="number" step="0.01" id="editProdMRP" class="form-control" required oninput="calculateEditSellingPrice()">
+            </div>
+            <div class="form-group">
+              <label for="editProdDiscount">Discount (%)</label>
+              <input type="number" step="0.1" id="editProdDiscount" class="form-control" min="0" max="100" oninput="calculateEditSellingPrice()">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="editProdSellingPrice">Selling Price (₹) *</label>
+            <input type="number" step="0.01" id="editProdSellingPrice" class="form-control" required>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label for="editProdCategory">Category</label>
+              <select id="editProdCategory" class="form-control">
+                <option value="Shirts">Shirts</option>
+                <option value="T-Shirts">T-Shirts</option>
+                <option value="Jeans">Jeans</option>
+                <option value="Trousers">Trousers</option>
+                <option value="Sarees">Sarees</option>
+                <option value="Kurtis">Kurtis</option>
+                <option value="Kids Wear">Kids Wear</option>
+                <option value="General">General</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label for="editProdSize">Size / Color Variant</label>
+              <input type="text" id="editProdSize" class="form-control" placeholder="e.g. XL/Black">
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeEditProductModal()">Cancel</button>
+          <button type="submit" class="btn btn-emerald">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ADJUST STOCK -->
+  <div class="modal-backdrop" id="adjustStockModal">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 style="font-size: 16px; font-weight: 700;">📦 Adjust Product Stock</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeAdjustStockModal()">✕</button>
+      </div>
+      <form id="adjustStockForm">
+        <input type="hidden" id="adjProductId">
+        <div class="modal-body">
+          <div id="adjRegAlert" class="alert" style="padding: 8px 10px; font-size:12px; margin-bottom:12px;"></div>
+          
+          <div class="form-group">
+            <label style="font-size: 11px; margin-bottom: 2px;">Garment Name</label>
+            <div id="adjProductNameDisplay" style="font-weight: 700; font-size: 14px; padding: 6px 0;"></div>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 12px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size: 11px; margin-bottom: 2px;">Current Stock</label>
+              <div id="adjCurrentStockDisplay" style="font-weight: 700; font-size: 16px; color:#3b82f6; padding: 6px 0;">0 pcs</div>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label for="adjType" style="font-size: 11px; margin-bottom: 2px;">Adjustment Type</label>
+              <select id="adjType" class="form-control" style="padding: 6px 10px; font-size:13px;" required>
+                <option value="STOCK_IN" selected>STOCK_IN (Add Stock)</option>
+                <option value="STOCK_OUT">STOCK_OUT (Deduct Stock)</option>
+                <option value="RETURN">RETURN (Return to Stock)</option>
+                <option value="ADJUSTMENT">ADJUSTMENT (Reset Stock)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="adjQty">Quantity *</label>
+            <input type="number" id="adjQty" class="form-control" placeholder="Enter stock quantity" min="1" required>
+          </div>
+
+          <div class="form-group">
+            <label for="adjReason">Adjustment Reason / Notes</label>
+            <input type="text" id="adjReason" class="form-control" placeholder="e.g. Consignment restock #4">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeAdjustStockModal()">Cancel</button>
+          <button type="submit" class="btn btn-purple">Apply Stock Adjustment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../js/security.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/barcode.js"></script>
+  <script>
+    // Guard Admin Route
+    if (!SecurityEngine.guardPage('ADMIN')) {
+      // Redirect handled by security engine
+    }
+
+    function showToast(msg, type = 'success') {
+      const toast = document.getElementById('toastAlert');
+      toast.className = `alert alert-${type} show`;
+      toast.innerHTML = `<span>${type === 'success' ? '✅' : '⚠️'}</span> <div>${msg}</div>`;
+      setTimeout(() => { toast.className = 'alert'; }, 4000);
+    }
+
+    function calculateRegSellingPrice() {
+      const mrp = parseFloat(document.getElementById('regProductMRP').value) || 0;
+      const disc = parseFloat(document.getElementById('regProductDiscount').value) || 0;
+      const selling = mrp - (mrp * disc / 100);
+      document.getElementById('regProductSellingPrice').value = selling.toFixed(2);
+    }
+
+    function updateRegBarcodePreview() {
+      const code = (document.getElementById('regProductBarcode').value || '').trim();
+      const box = document.getElementById('regBarcodePreviewBox');
+      if (code && window.BarcodeEngine) {
+        box.innerHTML = BarcodeEngine.generateSVG(code, {
+          height: 24,
+          width: 1.4,
+          showText: true,
+          fontSize: 9,
+          quietZone: 6
+        });
+      } else {
+        box.innerHTML = '<span style="font-size:11px; color:#94a3b8;">Enter barcode to preview</span>';
+      }
+    }
+
+    function updateEditBarcodePreview() {
+      const code = (document.getElementById('editProdBarcode').value || '').trim();
+      const box = document.getElementById('editBarcodePreviewBox');
+      if (code && window.BarcodeEngine) {
+        box.innerHTML = BarcodeEngine.generateSVG(code, {
+          height: 22,
+          width: 1.3,
+          showText: true,
+          fontSize: 9,
+          quietZone: 6
+        });
+      } else {
+        box.innerHTML = '<span style="font-size:11px; color:#94a3b8;">Enter barcode to preview</span>';
+      }
+    }
+
+    function autoGenerateRegBarcode() {
+      const code = BarcodeEngine.generateUniqueBarcode(cachedProducts);
+      document.getElementById('regProductBarcode').value = code;
+      updateRegBarcodePreview();
+    }
+
+    function autoGenerateEditBarcode() {
+      const code = BarcodeEngine.generateUniqueBarcode(cachedProducts);
+      document.getElementById('editProdBarcode').value = code;
+      updateEditBarcodePreview();
+    }
+
+    document.getElementById('regProductImageFile').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        document.getElementById('regProductImageBase64').value = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    let cachedProducts = [];
+
+    async function renderRegisteredProducts() {
+      const token = localStorage.getItem('rms_auth_token');
+      try {
+        const list = await AppStore.getProducts(token);
+        cachedProducts = list;
+        const grid = document.getElementById('regProductsGrid');
+        grid.innerHTML = '';
+        
+        const activeProducts = list.filter(p => p.isActive);
+        
+        if (activeProducts.length === 0) {
+          grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #64748b; padding: 40px;">No registered products found.</div>`;
+          return;
+        }
+        
+        activeProducts.forEach(p => {
+          const imgUrl = p.image || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=150';
+          const mrpVal = p.mrp || p.sellingPrice || 0;
+          const discVal = p.discount || 0;
+          const barcodeVal = p.barcode || p.sku || '8901001';
+
+          const card = document.createElement('div');
+          card.className = 'product-card';
+          card.setAttribute('data-id', p.id);
+          card.innerHTML = `
+            <div class="product-card-img-wrapper">
+              <img src="${imgUrl}" alt="${p.name}" onerror="this.src='https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=150'">
+            </div>
+            <div class="product-card-body" style="padding: 10px 12px; display: flex; flex-direction: column; gap: 4px;">
+              <div style="font-size: 13px; color: #334155; line-height: 1.3; font-weight: 700;">
+                <strong>Product Name:</strong> ${p.name}
+              </div>
+              <div style="font-size: 11px; color: #64748b; display: flex; flex-wrap: wrap; gap: 4px;">
+                <span class="product-tag">${p.category}</span>
+                <span class="product-tag">${p.size}</span>
+                <span class="product-tag">${p.color}</span>
+                <span class="product-tag" style="background:#e0e7ff; color:#3730a3; font-weight:700;">🏷️ ${barcodeVal}</span>
+              </div>
+              <div style="font-size: 13px; color: #334155;">
+                <strong>Price:</strong> ₹${p.sellingPrice.toFixed(2)} 
+                ${mrpVal > p.sellingPrice ? `<span style="font-size:11px; color:#94a3b8; text-decoration:line-through;">₹${mrpVal.toFixed(2)}</span>` : ''}
+              </div>
+              <div style="font-size: 13px; color: #334155;">
+                <strong>Quantity:</strong> <span style="font-weight:700; color:${p.stockQuantity > 5 ? '#16a34a' : (p.stockQuantity > 0 ? '#ea580c' : '#dc2626')}">${p.stockQuantity}</span>
+              </div>
+            </div>
+            <div class="product-card-actions" style="display: grid; grid-template-columns: 1fr 1.2fr 1fr; border-top: 1px solid var(--border);">
+              <button type="button" class="card-action-btn edit-btn" onclick="openEditProductModal('${p.id}')" style="padding: 9px 4px; font-weight: 700; font-size:11px;">✏️ Edit</button>
+              <button type="button" class="card-action-btn" onclick="BarcodeEngine.openLabelModal(cachedProducts.find(x => x.id === '${p.id}'), cachedProducts)" style="padding: 9px 4px; font-weight: 700; font-size:11px; color:#4f46e5; border-left: 1px solid var(--border); border-right: 1px solid var(--border);">🏷️ Label</button>
+              <button type="button" class="card-action-btn delete-btn" onclick="deactivateRegProduct('${p.id}')" style="padding: 9px 4px; font-weight: 700; font-size:11px;">🗑️ Delete</button>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+
+        attachCardContextMenu();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function attachCardContextMenu() {
+      const cards = document.querySelectorAll('.product-card');
+      const menu = document.getElementById('customContextMenu');
+      
+      cards.forEach(card => {
+        card.addEventListener('contextmenu', function(e) {
+          e.preventDefault();
+          const prodId = this.getAttribute('data-id');
+          const p = cachedProducts.find(prod => prod.id === prodId);
+          if (!p) return;
+
+          menu.style.top = e.pageY + 'px';
+          menu.style.left = e.pageX + 'px';
+          menu.style.display = 'block';
+
+          // Bind menu clicks
+          document.getElementById('ctxEditBtn').onclick = (evt) => {
+            evt.stopPropagation();
+            menu.style.display = 'none';
+            openEditProductModal(p.id);
+          };
+          document.getElementById('ctxStockBtn').onclick = (evt) => {
+            evt.stopPropagation();
+            menu.style.display = 'none';
+            openAdjustStockModal(p.id, p.name, p.stockQuantity);
+          };
+          document.getElementById('ctxLabelBtn').onclick = (evt) => {
+            evt.stopPropagation();
+            menu.style.display = 'none';
+            BarcodeEngine.openLabelModal(p, cachedProducts);
+          };
+          document.getElementById('ctxDeleteBtn').onclick = (evt) => {
+            evt.stopPropagation();
+            menu.style.display = 'none';
+            deactivateRegProduct(p.id);
+          };
+        });
+      });
+    }
+
+    // Dismiss custom context menu on outside click
+    document.addEventListener('click', function() {
+      const menu = document.getElementById('customContextMenu');
+      if (menu) menu.style.display = 'none';
+    });
+
+    async function deactivateRegProduct(id) {
+      if (!confirm('Are you sure you want to deactivate this product? It will be removed from POS billing.')) return;
+      const token = localStorage.getItem('rms_auth_token');
+      try {
+        await AppStore.deleteProduct(token, id);
+        showToast('Product deactivated successfully!');
+        renderRegisteredProducts();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    document.getElementById('productRegisterForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = localStorage.getItem('rms_auth_token');
+      const alertBox = document.getElementById('prdRegAlert');
+      alertBox.className = 'alert';
+
+      const barcodeVal = document.getElementById('regProductBarcode').value.trim() || BarcodeEngine.generateUniqueBarcode(cachedProducts);
+
+      const data = {
+        productId: document.getElementById('regProductId').value,
+        name: document.getElementById('regProductName').value,
+        description: document.getElementById('regProductDesc').value,
+        image: document.getElementById('regProductImageBase64').value || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=150',
+        stock: document.getElementById('regProductStock').value,
+        quantity: document.getElementById('regProductQty').value,
+        mrp: document.getElementById('regProductMRP').value,
+        discount: document.getElementById('regProductDiscount').value,
+        sellingPrice: document.getElementById('regProductSellingPrice').value,
+        gst: document.getElementById('regProductGST').value,
+        category: document.getElementById('regProductCategory').value,
+        size: document.getElementById('regProductSize').value.split('/')[0] || 'Free Size',
+        color: document.getElementById('regProductSize').value.split('/')[1] || 'Neutral',
+        barcode: barcodeVal,
+        sku: 'SKU-' + barcodeVal.slice(-6)
+      };
+
+      try {
+        const created = await AppStore.createProduct(token, data);
+        alertBox.className = 'alert alert-success show';
+        alertBox.innerHTML = `
+          <span>✅</span> 
+          <div>
+            Product registered successfully! <strong>Barcode: ${barcodeVal}</strong>
+            <button type="button" class="btn btn-outline btn-sm" onclick="BarcodeEngine.openLabelModal(${JSON.stringify(created).replace(/"/g, '&quot;')}, cachedProducts)" style="margin-left: 8px; font-size: 11px; padding: 2px 8px; background: white; color: #15803d; border-color: #86efac;">🏷️ Print Label</button>
+          </div>
+        `;
+        document.getElementById('productRegisterForm').reset();
+        document.getElementById('regProductImageBase64').value = '';
+        document.getElementById('regProductId').value = 'prd_' + Date.now().toString().slice(-6);
+        autoGenerateRegBarcode();
+        renderRegisteredProducts();
+        setTimeout(() => { alertBox.className = 'alert'; }, 5000);
+      } catch (err) {
+        alertBox.className = 'alert alert-error show';
+        alertBox.innerHTML = `<span>⚠️</span> <div>${err.message}</div>`;
+      }
+    });
+
+    function openEditProductModal(productId) {
+      const p = cachedProducts.find(prod => prod.id === productId);
+      if (!p) {
+        showToast('Product details not found in cache.', 'error');
+        return;
+      }
+      
+      document.getElementById('editPrdAlert').className = 'alert';
+      document.getElementById('editProductForm').reset();
+      
+      document.getElementById('editProdId').value = p.id;
+      document.getElementById('editProdName').value = p.name || '';
+      document.getElementById('editProdDesc').value = p.description || '';
+      document.getElementById('editProdImageBase64').value = p.image || '';
+      document.getElementById('editProdBarcode').value = p.barcode || p.sku || '';
+      document.getElementById('editProdStock').value = p.stockQuantity || 0;
+      document.getElementById('editProdQty').value = p.quantity || '1 piece';
+      document.getElementById('editProdGST').value = p.taxRate || p.gst || 5;
+      document.getElementById('editProdMRP').value = p.mrp || p.sellingPrice || 0;
+      document.getElementById('editProdDiscount').value = p.discount || 0;
+      document.getElementById('editProdSellingPrice').value = p.sellingPrice || 0;
+      document.getElementById('editProdCategory').value = p.category || 'General';
+      document.getElementById('editProdSize').value = `${p.size || 'Free Size'}/${p.color || 'Neutral'}`;
+
+      updateEditBarcodePreview();
+      document.getElementById('editProductModal').classList.add('show');
+    }
+
+    function closeEditProductModal() {
+      document.getElementById('editProductModal').classList.remove('show');
+    }
+
+    function calculateEditSellingPrice() {
+      const mrp = parseFloat(document.getElementById('editProdMRP').value) || 0;
+      const disc = parseFloat(document.getElementById('editProdDiscount').value) || 0;
+      const selling = mrp - (mrp * disc / 100);
+      document.getElementById('editProdSellingPrice').value = selling.toFixed(2);
+    }
+
+    document.getElementById('editProdImageFile').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        document.getElementById('editProdImageBase64').value = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('editProductForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = localStorage.getItem('rms_auth_token');
+      const alertBox = document.getElementById('editPrdAlert');
+      alertBox.className = 'alert';
+
+      const productId = document.getElementById('editProdId').value;
+      const data = {
+        name: document.getElementById('editProdName').value,
+        description: document.getElementById('editProdDesc').value,
+        barcode: document.getElementById('editProdBarcode').value.trim(),
+        stock: document.getElementById('editProdStock').value,
+        quantity: document.getElementById('editProdQty').value,
+        mrp: document.getElementById('editProdMRP').value,
+        discount: document.getElementById('editProdDiscount').value,
+        sellingPrice: document.getElementById('editProdSellingPrice').value,
+        gst: document.getElementById('editProdGST').value,
+        category: document.getElementById('editProdCategory').value,
+        size: document.getElementById('editProdSize').value.split('/')[0] || 'Free Size',
+        color: document.getElementById('editProdSize').value.split('/')[1] || 'Neutral',
+      };
+
+      const imgBase64 = document.getElementById('editProdImageBase64').value;
+      if (imgBase64) {
+        data.image = imgBase64;
+      }
+
+      try {
+        await AppStore.updateProduct(token, productId, data);
+        showToast('Product updated successfully!');
+        closeEditProductModal();
+        renderRegisteredProducts();
+      } catch (err) {
+        alertBox.className = 'alert alert-error show';
+        alertBox.innerHTML = `<span>⚠️</span> <div>${err.message}</div>`;
+      }
+    });
+
+    // ----------------------------------------------------
+    // ADJUST STOCK MODAL
+    // ----------------------------------------------------
+    function openAdjustStockModal(productId, productName, currentStock) {
+      document.getElementById('adjRegAlert').className = 'alert';
+      document.getElementById('adjustStockForm').reset();
+      document.getElementById('adjProductId').value = productId;
+      document.getElementById('adjProductNameDisplay').textContent = productName;
+      document.getElementById('adjCurrentStockDisplay').textContent = currentStock + ' pcs';
+      document.getElementById('adjustStockModal').classList.add('show');
+    }
+
+    function closeAdjustStockModal() {
+      document.getElementById('adjustStockModal').classList.remove('show');
+    }
+
+    document.getElementById('adjustStockForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = localStorage.getItem('rms_auth_token');
+      const alertBox = document.getElementById('adjRegAlert');
+      alertBox.className = 'alert';
+
+      const prodId = document.getElementById('adjProductId').value;
+      const type = document.getElementById('adjType').value;
+      const qty = parseInt(document.getElementById('adjQty').value, 10);
+      const reason = document.getElementById('adjReason').value.trim() || 'Manual stock adjustment';
+
+      try {
+        await AppStore.adjustStock(token, prodId, qty, type, reason);
+        showToast(`Stock adjusted successfully! (${type} ${qty} pcs)`);
+        closeAdjustStockModal();
+        renderRegisteredProducts();
+      } catch (err) {
+        alertBox.className = 'alert alert-error show';
+        alertBox.innerHTML = `<span>⚠️</span> <div>${err.message}</div>`;
+      }
+    });
+
+    function logout() {
+      SecurityEngine.clearSession();
+      window.location.href = '../admin-login.html';
+    }
+
+    // Auto generate default product ID and Barcode on load
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('regProductId').value = 'prd_' + Date.now().toString().slice(-6);
+      autoGenerateRegBarcode();
+      renderRegisteredProducts();
+    });
+  </script>
+</body>
+</html>

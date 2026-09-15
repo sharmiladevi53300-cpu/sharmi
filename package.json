@@ -1,0 +1,32 @@
+{
+  "name": "readymade-shop-management",
+  "version": "1.0.0",
+  "description": "Readymade Clothing Shop Management System with Strict Admin & Cashier RBAC Security",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "nodemon server/server.js",
+    "test": "node tests/security.test.js"
+  },
+  "keywords": [
+    "pos",
+    "retail",
+    "readymade-shop",
+    "rbac",
+    "security"
+  ],
+  "author": "Readymade Shop Dev Team",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.3.1",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}

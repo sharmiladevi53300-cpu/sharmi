@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Damaged & Return Products Management - Readymade Shop</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    :root {
+      --primary: #4338ca;
+      --primary-dark: #312e81;
+      --danger: #dc2626;
+      --success: #059669;
+      --warning: #d97706;
+      --surface: #ffffff;
+      --bg: #f8fafc;
+      --border: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.03);
+    }
+
+    body {
+      background-color: var(--bg);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: var(--text-main);
+    }
+
+    .main-container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 20px 24px 60px 24px;
+    }
+
+    /* Header Bar */
+    .page-header-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .page-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .page-title h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .page-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* KPI Summary Cards Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .stat-card-header h4 {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #475569;
+    }
+    .stat-icon {
+      font-size: 20px;
+    }
+    .stat-card .value {
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+    .stat-card .sub-detail {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-red { border-left: 4px solid #dc2626; }
+    .card-amber { border-left: 4px solid #d97706; }
+    .card-blue { border-left: 4px solid #0284c7; }
+    .card-emerald { border-left: 4px solid #059669; }
+    .card-purple { border-left: 4px solid #7c3aed; }
+
+    /* Tabs Styling */
+    .tab-nav {
+      display: flex;
+      gap: 8px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #64748b;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 6px 6px 0 0;
+    }
+    .tab-btn:hover {
+      color: #1e1b4b;
+      background: #f1f5f9;
+    }
+    .tab-btn.active {
+      color: #4338ca;
+      border-bottom-color: #4338ca;
+      background: #eef2ff;
+    }
+    .tab-badge {
+      background: #e2e8f0;
+      color: #334155;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+    .tab-btn.active .tab-badge {
+      background: #4338ca;
+      color: white;
+    }
+
+    .tab-pane {
+      display: none;
+    }
+    .tab-pane.active {
+      display: block;
+    }
+
+    /* Filter Card */
+    .filter-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Table Container */
+    .table-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .table-responsive {
+      overflow-x: auto;
+      max-height: 600px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      text-align: left;
+    }
+    th {
+      background-color: #f8fafc;
+      color: #475569;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
+    }
+    tr:hover td {
+      background-color: #f8fafc;
+    }
+
+    /* Badges */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 11px;
+    }
+    .badge-red { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+    .badge-amber { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+    .badge-green { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .badge-blue { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .badge-gray { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+    .badge-purple { background: #f3e8ff; color: #6b21a8; border: 1px solid #d8b4fe; }
+
+    /* Modals */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .modal-overlay.show {
+      display: flex;
+    }
+    .modal-box {
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 650px;
+      overflow: hidden;
+      animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .modal-box.large {
+      max-width: 900px;
+    }
+    @keyframes modalPop {
+      0% { opacity: 0; transform: scale(0.96) translateY(8px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal-header {
+      padding: 16px 20px;
+      background: #1e1b4b;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .modal-body {
+      padding: 20px;
+      max-height: 75vh;
+      overflow-y: auto;
+    }
+    .modal-footer {
+      padding: 14px 20px;
+      background: #f8fafc;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    @media (max-width: 600px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+
+    /* Print Styles */
+    @media print {
+      body {
+        background: white !important;
+        color: black !important;
+      }
+      .top-navbar, .page-header-card, .tab-nav, .filter-card, .btn, .no-print, .modal-overlay {
+        display: none !important;
+      }
+      .main-container {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      .print-header {
+        display: block !important;
+        margin-bottom: 20px;
+        text-align: center;
+        border-bottom: 2px solid #0f172a;
+        padding-bottom: 12px;
+      }
+      .table-card {
+        box-shadow: none !important;
+        border: none !important;
+      }
+      .table-responsive {
+        max-height: none !important;
+        overflow: visible !important;
+      }
+      table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+        font-size: 10px !important;
+      }
+      th, td {
+        border: 1px solid #94a3b8 !important;
+        padding: 6px 8px !important;
+      }
+      .print-audit-footer {
+        display: block !important;
+        margin-top: 40px;
+      }
+    }
+    .print-header, .print-audit-footer {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Navbar -->
+  <header class="top-navbar" style="background: #1e1b4b; color: white; border-bottom: none;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="font-size: 24px;">🚨</div>
+      <div>
+        <div style="font-weight: 800; font-size: 15px; color: #fff;">Damaged & Return Management</div>
+        <div style="font-size: 11px; color: #fca5a5;">ADMIN PANEL &bull; சேதமடைந்த & ரிட்டர்ன் மேலாண்மை (RTV & Loss Audit)</div>
+      </div>
+    </div>
+
+    <div class="user-menu">
+      <button class="btn btn-outline btn-sm" onclick="window.location.href='index.html'" style="background:#312e81; color:#fff; border-color:#4338ca;">
+        🔙 POS Dashboard
+      </button>
+      <button class="btn btn-outline btn-sm" onclick="window.location.href='stock-report.html'" style="background:#0891b2; color:#fff; border-color:#06b6d4; font-weight:700;">
+        📈 Stock Valuation & Inward
+      </button>
+      <button class="btn btn-outline btn-sm" onclick="window.location.href='bills.html'" style="background:#059669; color:#fff; border-color:#10b981; font-weight:700;">
+        🧾 Bill Management
+      </button>
+      <button class="btn btn-outline btn-sm" onclick="window.location.href='products.html'" style="background:#0369a1; color:#fff; border-color:#0284c7;">
+        👚 Product Registration
+      </button>
+      <button class="btn btn-danger btn-sm" onclick="logout()">
+        Sign Out 🚪
+      </button>
+    </div>
+  </header>
+
+  <div class="main-container">
+    <!-- Print Only Header -->
+    <div class="print-header">
+      <h1 style="margin: 0; font-size: 22px; font-weight: 800;">READYMADE CLOTHING SHOP</h1>
+      <div style="font-size: 13px; color: #475569; margin: 4px 0;">Official Damaged Goods, Customer Returns & Supplier Claim (RTV) Audit Statement</div>
+      <div style="font-size: 11px; color: #64748b;" id="printTimestamp">Generated On: -</div>
+    </div>
+
+    <!-- Page Header & Action Bar -->
+    <div class="page-header-card no-print">
+      <div class="page-title">
+        <span style="font-size: 28px;">📉</span>
+        <div>
+          <h2>Damaged Stock, Customer Returns & Supplier RTV</h2>
+          <div class="page-subtitle">Track Defective Garments, Exact Purchase Loss Amount, Customer Returns, and Supplier Claims</div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="btn btn-danger btn-sm" onclick="openRecordDamageModal()" style="font-weight: 700; display: flex; align-items: center; gap: 6px;">
+          <span>➕</span> Record Damaged Product (சேதமடைந்த பொருள் பதிவு)
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="openCustomerReturnModal()" style="background: #ffffff; color: #0f172a; border-color: #cbd5e1; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+          <span>🔄</span> Customer Return (வாடிக்கையாளர் ரிட்டர்ன்)
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="openSupplierReturnModal()" style="background: #4338ca; color: #ffffff; border-color: #3730a3; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+          <span>🏬</span> Return to Supplier (RTV)
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="window.print()" style="background: #1e293b; color: #fff; font-weight: 700;">
+          <span>🖨️</span> Print Statement
+        </button>
+      </div>
+    </div>
+
+    <!-- Toast Alert -->
+    <div id="toastAlert" class="alert no-print" style="margin-bottom: 16px;"></div>
+
+    <!-- KPI Metrics Grid -->
+    <div class="stats-grid">
+      <!-- Total Damaged Loss -->
+      <div class="stat-card card-red">
+        <div class="stat-card-header">
+          <h4>Gross Damage Loss (மொத்த சேத இழப்பு)</h4>
+          <span class="stat-icon">🚨</span>
+        </div>
+        <div class="value" id="kpiDamageLoss" style="color: #dc2626;">₹0.00</div>
+        <div class="sub-detail">
+          <span>Damaged Pieces: <strong id="kpiDamagedUnits">0</strong> pcs</span>
+          <span style="color: #64748b;">At Cost Rate</span>
+        </div>
+      </div>
+
+      <!-- Customer Returns -->
+      <div class="stat-card card-amber">
+        <div class="stat-card-header">
+          <h4>Customer Returns (வாடிக்கையாளர் ரிட்டர்ன்)</h4>
+          <span class="stat-icon">🔄</span>
+        </div>
+        <div class="value" id="kpiCustRefund" style="color: #d97706;">₹0.00</div>
+        <div class="sub-detail">
+          <span>Total Returns: <strong id="kpiCustCount">0</strong> bills</span>
+          <span>Refunded</span>
+        </div>
+      </div>
+
+      <!-- Supplier Returns Dispatched -->
+      <div class="stat-card card-blue">
+        <div class="stat-card-header">
+          <h4>Supplier Claims (சப்ளையர் கோரிக்கை)</h4>
+          <span class="stat-icon">🏬</span>
+        </div>
+        <div class="value" id="kpiSupplierClaim" style="color: #0284c7;">₹0.00</div>
+        <div class="sub-detail">
+          <span>RTV Parcels: <strong id="kpiSupplierCount">0</strong></span>
+          <span>Dispatched to Mills</span>
+        </div>
+      </div>
+
+      <!-- Recovered from Vendors -->
+      <div class="stat-card card-emerald">
+        <div class="stat-card-header">
+          <h4>Recovered / Credit (மீட்கப்பட்ட இழப்பீடு)</h4>
+          <span class="stat-icon">💰</span>
+        </div>
+        <div class="value" id="kpiSupplierRecovered" style="color: #059669;">₹0.00</div>
+        <div class="sub-detail">
+          <span>Via Credit Note / Refund</span>
+        </div>
+      </div>
+
+      <!-- Net Actual Shop Loss -->
+      <div class="stat-card card-purple">
+        <div class="stat-card-header">
+          <h4>Net Shop Loss (நிகர கடை இழப்பு)</h4>
+          <span class="stat-icon">📉</span>
+        </div>
+        <div class="value" id="kpiNetLoss" style="color: #7c3aed;">₹0.00</div>
+        <div class="sub-detail">
+          <span>(Gross Loss - Recovered)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="tab-nav no-print">
+      <button class="tab-btn active" onclick="switchTab('tabDamaged', this)">
+        <span>🚨 Damaged Stock Register (சேதமடைந்த பொருட்கள்)</span>
+        <span class="tab-badge" id="badgeDamagedCount">0</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('tabCustomer', this)">
+        <span>🔄 Customer Returns (வாடிக்கையாளர் ரிட்டர்ன்)</span>
+        <span class="tab-badge" id="badgeCustomerCount">0</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('tabSupplier', this)">
+        <span>🏬 Supplier Returns & Claims (சப்ளையர் RTV & ரீஃபண்ட்)</span>
+        <span class="tab-badge" id="badgeSupplierCount">0</span>
+      </button>
+    </div>
+
+    <!-- ================= TAB 1: DAMAGED PRODUCTS ================= -->
+    <div id="tabDamaged" class="tab-pane active">
+      <div class="filter-card no-print">
+        <input type="text" id="damageSearchInput" class="form-control" placeholder="Search by product name, SKU, reason, supplier..." style="flex: 1; min-width: 220px; font-size: 13px;" oninput="renderDamagedTable()">
+        <select id="damageFilterStatus" class="form-control" style="min-width: 180px; font-size: 12px;" onchange="renderDamagedTable()">
+          <option value="ALL">All Statuses</option>
+          <option value="PENDING_ACTION">Action Pending (நடவடிக்கை தேவை)</option>
+          <option value="RETURNED_TO_SUPPLIER">Returned to Vendor (சப்ளையருக்கு அனுப்பியது)</option>
+          <option value="WRITTEN_OFF_SCRAP">Written Off (கழிவு/தள்ளுபடி)</option>
+          <option value="REPAIRED_DISCOUNT_SALE">Repaired / Discount Sale (சரிசெய்தது)</option>
+        </select>
+        <button class="btn btn-outline btn-sm" onclick="resetDamageFilters()">Reset</button>
+      </div>
+
+      <div class="table-card">
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Date & ID</th>
+                <th>Product & Details</th>
+                <th>Damage Reason / Fault</th>
+                <th style="text-align: center;">Qty</th>
+                <th style="text-align: right;">Unit Cost</th>
+                <th style="text-align: right;">Total Loss (₹)</th>
+                <th>Source</th>
+                <th>Supplier / Vendor</th>
+                <th style="text-align: center;">Status</th>
+                <th style="text-align: center;" class="no-print">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="damagedTableBody">
+              <!-- Populated via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= TAB 2: CUSTOMER RETURNS ================= -->
+    <div id="tabCustomer" class="tab-pane">
+      <div class="filter-card no-print">
+        <input type="text" id="custReturnSearchInput" class="form-control" placeholder="Search by bill #, customer name, mobile, product..." style="flex: 1; min-width: 220px; font-size: 13px;" oninput="renderCustomerReturnsTable()">
+        <select id="custReturnFilterCondition" class="form-control" style="min-width: 180px; font-size: 12px;" onchange="renderCustomerReturnsTable()">
+          <option value="ALL">All Conditions</option>
+          <option value="GOOD_CONDITION_RESTOCK">Good Condition (Restocked to Available)</option>
+          <option value="DEFECTIVE_DAMAGED">Defective / Damaged (Sent to Damaged Register)</option>
+        </select>
+        <button class="btn btn-outline btn-sm" onclick="resetCustomerReturnFilters()">Reset</button>
+      </div>
+
+      <div class="table-card">
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Sale Bill / Invoice #</th>
+                <th>Product Returned</th>
+                <th style="text-align: center;">Qty</th>
+                <th style="text-align: right;">Refund Amount</th>
+                <th>Refund Mode</th>
+                <th>Item Condition</th>
+                <th>Customer Details</th>
+                <th>Reason</th>
+                <th>Handled By</th>
+              </tr>
+            </thead>
+            <tbody id="customerReturnsTableBody">
+              <!-- Populated via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= TAB 3: SUPPLIER RETURNS (RTV) ================= -->
+    <div id="tabSupplier" class="tab-pane">
+      <div class="filter-card no-print">
+        <input type="text" id="rtvSearchInput" class="form-control" placeholder="Search by supplier name, mobile, bill #, courier..." style="flex: 1; min-width: 220px; font-size: 13px;" oninput="renderSupplierReturnsTable()">
+        <select id="rtvFilterStatus" class="form-control" style="min-width: 180px; font-size: 12px;" onchange="renderSupplierReturnsTable()">
+          <option value="ALL">All Claim Statuses</option>
+          <option value="RETURN_DISPATCHED">Dispatched to Vendor (அனுப்பப்பட்டது)</option>
+          <option value="SUPPLIER_CREDIT_NOTE">Credit Note Received (வரவு பில் பெறப்பட்டது)</option>
+          <option value="REFUND_RECEIVED">Cash/Bank Refund Received (பணம் பெறப்பட்டது)</option>
+          <option value="REPLACEMENT_RECEIVED">Replacement Received (புதிய துணிகள் வந்தது)</option>
+          <option value="REJECTED_BY_SUPPLIER">Rejected by Supplier (நிராகரிக்கப்பட்டது)</option>
+        </select>
+        <button class="btn btn-outline btn-sm" onclick="resetRtvFilters()">Reset</button>
+      </div>
+
+      <div class="table-card">
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Dispatch Date & ID</th>
+                <th>Supplier / Vendor</th>
+                <th>Original Bill #</th>
+                <th>Returned Garments</th>
+                <th style="text-align: right;">Total Claim (₹)</th>
+                <th>Courier / Tracking #</th>
+                <th style="text-align: center;">Claim Status</th>
+                <th style="text-align: right;">Recovered (₹)</th>
+                <th>Resolution Notes</th>
+                <th style="text-align: center;" class="no-print">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="supplierReturnsTableBody">
+              <!-- Populated via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Print Audit Footer -->
+    <div class="print-audit-footer">
+      <div style="display: flex; justify-content: space-between; margin-top: 60px; font-size: 12px;">
+        <div style="border-top: 1px solid #000; width: 220px; text-align: center; padding-top: 6px;">
+          Store Manager / Cashier Sign
+        </div>
+        <div style="border-top: 1px solid #000; width: 220px; text-align: center; padding-top: 6px;">
+          Shop Owner / Authorised Signatory
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 1: RECORD DAMAGED PRODUCT ================= -->
+  <div id="recordDamageModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header" style="background: #991b1b;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 20px;">🚨</span>
+          <h3>Record Damaged / Defective Garment (சேதமடைந்த பொருள் பதிவு)</h3>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="closeRecordDamageModal()" style="color: white; border-color: rgba(255,255,255,0.4); padding: 2px 8px;">✕</button>
+      </div>
+      <form id="recordDamageForm" onsubmit="submitDamagedProduct(event)">
+        <div class="modal-body">
+          <div id="damageModalAlert" class="alert alert-danger" style="display: none; margin-bottom: 12px;"></div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label for="dmgProductSelect" style="font-size: 11px; font-weight: 700; color: #475569;">Select Apparel Product *</label>
+            <select id="dmgProductSelect" class="form-control" required onchange="onDmgProductChange()" style="font-size: 13px;">
+              <option value="">-- Choose Product --</option>
+            </select>
+          </div>
+
+          <!-- Product Preview -->
+          <div id="dmgProductPreview" style="display: none; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 10px; margin-bottom: 12px; font-size: 12px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span>Available Stock: <strong id="dmgPrevStock">0</strong> pcs</span>
+              <span>Purchase Cost Rate: <strong id="dmgPrevCost" style="color: #991b1b;">₹0.00</strong></span>
+            </div>
+            <div style="margin-top: 4px; color: #64748b;">
+              Original Supplier: <strong id="dmgPrevSupplier">-</strong>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="dmgQuantity" style="font-size: 11px; font-weight: 700; color: #475569;">Damaged Quantity (Pcs) *</label>
+              <input type="number" id="dmgQuantity" class="form-control" min="1" value="1" required oninput="calcDmgLoss()">
+            </div>
+            <div class="form-group">
+              <label for="dmgReason" style="font-size: 11px; font-weight: 700; color: #475569;">Damage Reason / Defect Type *</label>
+              <select id="dmgReason" class="form-control" required style="font-size: 12px;">
+                <option value="FABRIC_TORN">துணி கிழிந்தது (Fabric Torn)</option>
+                <option value="STAINED_DIRTY">கறை / அழுக்கு (Stained / Oil Mark)</option>
+                <option value="COLOR_FADE_DEFECT">நிறம் மங்கியது / அச்சு குறைபாடு (Color Fade / Print Defect)</option>
+                <option value="STITCHING_DEFECT">தையல் குறைபாடு (Stitching / Seam Defect)</option>
+                <option value="BROKEN_ZIP_BUTTON">ஜிப் / பொத்தான் சேதம் (Broken Zip / Missing Buttons)</option>
+                <option value="CUSTOMER_TRIAL_DAMAGE">வாடிக்கையாளர் சேதப்படுத்தியது (Customer Trial Damage)</option>
+                <option value="TRANSIT_DAMAGE">போக்குவரத்து சேதம் (Transit / Delivery Damage)</option>
+                <option value="OTHER">மற்றவை (Other)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="dmgSource" style="font-size: 11px; font-weight: 700; color: #475569;">Found Source</label>
+              <select id="dmgSource" class="form-control" style="font-size: 12px;">
+                <option value="SHOP_FLOOR_FOUND">Shop Floor / Rack (கடையில் கண்டறியப்பட்டது)</option>
+                <option value="RECEIVED_FROM_SUPPLIER">Received from Supplier (பார்சலில் சேதமாய் வந்தது)</option>
+                <option value="CUSTOMER_RETURN">Customer Return (வாடிக்கையாளர் ரிட்டர்ன்)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="dmgSupplierName" style="font-size: 11px; font-weight: 700; color: #475569;">Supplier / Mill Name (for RTV)</label>
+              <input type="text" id="dmgSupplierName" class="form-control" placeholder="e.g. Tirupur Tex Wholesale Mills" style="font-size: 12px;">
+            </div>
+          </div>
+
+          <!-- Total Loss Calculation Box -->
+          <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span style="font-weight: 700; color: #475569; font-size: 12px;">Calculated Financial Cost Loss:</span>
+            <span id="dmgCalculatedLoss" style="font-weight: 800; font-size: 16px; color: #dc2626;">₹0.00</span>
+          </div>
+
+          <div class="form-group">
+            <label for="dmgNotes" style="font-size: 11px; font-weight: 700; color: #475569;">Damage Inspection Notes</label>
+            <input type="text" id="dmgNotes" class="form-control" placeholder="e.g. Left sleeve torn along stitching seam" style="font-size: 12px;">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeRecordDamageModal()">Cancel</button>
+          <button type="submit" class="btn btn-danger" id="btnSaveDamage" style="font-weight: 700;">
+            💾 Deduct Stock & Record Loss
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 2: CUSTOMER RETURN ================= -->
+  <div id="customerReturnModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header" style="background: #0f172a;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 20px;">🔄</span>
+          <h3>Record Customer Sales Return (வாடிக்கையாளர் ரிட்டர்ன்)</h3>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="closeCustomerReturnModal()" style="color: white; border-color: rgba(255,255,255,0.4); padding: 2px 8px;">✕</button>
+      </div>
+      <form id="customerReturnForm" onsubmit="submitCustomerReturn(event)">
+        <div class="modal-body">
+          <div id="custModalAlert" class="alert alert-danger" style="display: none; margin-bottom: 12px;"></div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="crtInvoiceNo" style="font-size: 11px; font-weight: 700; color: #475569;">Sale Bill / Invoice #</label>
+              <input type="text" id="crtInvoiceNo" class="form-control" placeholder="e.g. INV-100198" style="font-size: 12px;">
+            </div>
+            <div class="form-group">
+              <label for="crtProductSelect" style="font-size: 11px; font-weight: 700; color: #475569;">Returned Product *</label>
+              <select id="crtProductSelect" class="form-control" required style="font-size: 12px;" onchange="onCrtProductChange()">
+                <option value="">-- Choose Product --</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="crtQuantity" style="font-size: 11px; font-weight: 700; color: #475569;">Quantity Returned *</label>
+              <input type="number" id="crtQuantity" class="form-control" min="1" value="1" required oninput="calcCrtRefund()">
+            </div>
+            <div class="form-group">
+              <label for="crtRefundAmount" style="font-size: 11px; font-weight: 700; color: #475569;">Refund Amount (₹) *</label>
+              <input type="number" step="0.5" id="crtRefundAmount" class="form-control" required style="font-size: 12px; font-weight: 700; color: #059669;">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="crtCondition" style="font-size: 11px; font-weight: 700; color: #475569;">Garment Condition *</label>
+              <select id="crtCondition" class="form-control" required style="font-size: 12px; font-weight: 700;">
+                <option value="GOOD_CONDITION_RESTOCK">✅ Good / Unused (Restock into Available Stock)</option>
+                <option value="DEFECTIVE_DAMAGED">🚨 Damaged / Defective (Move to Damaged Register for RTV)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="crtRefundMethod" style="font-size: 11px; font-weight: 700; color: #475569;">Refund Mode</label>
+              <select id="crtRefundMethod" class="form-control" style="font-size: 12px;">
+                <option value="CASH">💵 Cash Refund</option>
+                <option value="UPI">📱 UPI / GPay</option>
+                <option value="STORE_CREDIT">🎫 Store Credit / Voucher</option>
+                <option value="EXCHANGE">🔄 Exchange Adjusted</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="crtCustName" style="font-size: 11px; font-weight: 700; color: #475569;">Customer Name</label>
+              <input type="text" id="crtCustName" class="form-control" placeholder="e.g. Ramesh Kumar" style="font-size: 12px;">
+            </div>
+            <div class="form-group">
+              <label for="crtCustMobile" style="font-size: 11px; font-weight: 700; color: #475569;">Customer Mobile</label>
+              <input type="text" id="crtCustMobile" class="form-control" placeholder="e.g. 98401 23456" style="font-size: 12px;">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="crtReason" style="font-size: 11px; font-weight: 700; color: #475569;">Reason for Return</label>
+            <input type="text" id="crtReason" class="form-control" placeholder="e.g. Size didn't fit / Color not matching" style="font-size: 12px;">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeCustomerReturnModal()">Cancel</button>
+          <button type="submit" class="btn btn-success" id="btnSaveCustReturn" style="font-weight: 700;">
+            💾 Process Customer Return
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 3: SUPPLIER RETURN (RTV) ================= -->
+  <div id="supplierReturnModal" class="modal-overlay">
+    <div class="modal-box large">
+      <div class="modal-header" style="background: #312e81;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 20px;">🏬</span>
+          <h3>Return to Supplier (Return to Vendor - RTV / சப்ளையர் ரிட்டர்ன்)</h3>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="closeSupplierReturnModal()" style="color: white; border-color: rgba(255,255,255,0.4); padding: 2px 8px;">✕</button>
+      </div>
+      <form id="supplierReturnForm" onsubmit="submitSupplierReturn(event)">
+        <div class="modal-body">
+          <div id="rtvModalAlert" class="alert alert-danger" style="display: none; margin-bottom: 12px;"></div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="rtvSupplierName" style="font-size: 11px; font-weight: 700; color: #475569;">Supplier / Vendor / Mill Name *</label>
+              <input type="text" id="rtvSupplierName" class="form-control" required placeholder="e.g. Tirupur Tex Wholesale Mills" style="font-size: 12px;">
+            </div>
+            <div class="form-group">
+              <label for="rtvSupplierMobile" style="font-size: 11px; font-weight: 700; color: #475569;">Supplier Mobile / Contact</label>
+              <input type="text" id="rtvSupplierMobile" class="form-control" placeholder="e.g. +91 98421 55667" style="font-size: 12px;">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="rtvOriginalInvoice" style="font-size: 11px; font-weight: 700; color: #475569;">Original Supplier Bill #</label>
+              <input type="text" id="rtvOriginalInvoice" class="form-control" placeholder="e.g. TEX-INV-8910" style="font-size: 12px;">
+            </div>
+            <div class="form-group">
+              <label for="rtvReason" style="font-size: 11px; font-weight: 700; color: #475569;">Return Reason</label>
+              <select id="rtvReason" class="form-control" style="font-size: 12px;">
+                <option value="MANUFACTURING_DEFECT">உற்பத்தி குறைபாடு (Manufacturing / Fabric Defect)</option>
+                <option value="WEAVING_STITCH_DEFECT">நெசவு / தையல் பிழை (Weaving / Stitching Defect)</option>
+                <option value="WRONG_ITEM_SUPPLIED">தவறான பொருள் அனுப்பப்பட்டது (Wrong Item Supplied)</option>
+                <option value="TRANSIT_DAMAGE">போக்குவரத்து சேதம் (Transit Damage)</option>
+                <option value="EXCESS_STOCK_RETURN">விற்பனையாகாத இருப்பு திருப்பி அனுப்புதல் (Excess Stock Return)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Select From Pending Damaged Items OR Pick Product -->
+          <div style="margin-top: 12px; margin-bottom: 12px;">
+            <label style="font-size: 12px; font-weight: 700; color: #1e1b4b; display: block; margin-bottom: 6px;">
+              Select Items to Return to Supplier:
+            </label>
+            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 10px; max-height: 200px; overflow-y: auto;" id="rtvItemSelectionContainer">
+              <!-- Checkbox items populated via JS -->
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="rtvCourierName" style="font-size: 11px; font-weight: 700; color: #475569;">Courier / Transport / Delivery Mode</label>
+              <input type="text" id="rtvCourierName" class="form-control" placeholder="e.g. ST Courier / Professional / Direct Driver" style="font-size: 12px;">
+            </div>
+            <div class="form-group">
+              <label for="rtvTrackingNo" style="font-size: 11px; font-weight: 700; color: #475569;">Courier Docket / Tracking # / Slip No</label>
+              <input type="text" id="rtvTrackingNo" class="form-control" placeholder="e.g. STC-998822" style="font-size: 12px;">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="rtvNotes" style="font-size: 11px; font-weight: 700; color: #475569;">Dispatch Notes</label>
+            <input type="text" id="rtvNotes" class="form-control" placeholder="e.g. Handed over defective shirts for credit note adjustment" style="font-size: 12px;">
+          </div>
+        </div>
+        <div class="modal-footer" style="justify-content: space-between;">
+          <div style="font-size: 13px; font-weight: 700; color: #4338ca;">
+            Total Claim Amount: <span id="rtvTotalClaimDisplay">₹0.00</span>
+          </div>
+          <div>
+            <button type="button" class="btn btn-outline" onclick="closeSupplierReturnModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btnSaveRtv" style="font-weight: 700; background: #4338ca;">
+              🚚 Dispatch RTV to Supplier
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 4: UPDATE SUPPLIER CLAIM RESOLUTION ================= -->
+  <div id="resolveClaimModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header" style="background: #059669;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 20px;">📝</span>
+          <h3>Update Supplier Claim Resolution (ரீஃபண்ட் / கிரெடிட் நோட் வரவு)</h3>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="closeResolveClaimModal()" style="color: white; border-color: rgba(255,255,255,0.4); padding: 2px 8px;">✕</button>
+      </div>
+      <form id="resolveClaimForm" onsubmit="submitClaimResolution(event)">
+        <input type="hidden" id="resolveRtvId">
+        <div class="modal-body">
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 10px; margin-bottom: 12px; font-size: 12px;">
+            <div>Supplier: <strong id="resSupplierName">-</strong></div>
+            <div>Total Claimed: <strong id="resClaimAmount" style="color: #059669;">₹0.00</strong></div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label for="resStatus" style="font-size: 11px; font-weight: 700; color: #475569;">Supplier Resolution Status *</label>
+            <select id="resStatus" class="form-control" required style="font-size: 12px; font-weight: 700;">
+              <option value="SUPPLIER_CREDIT_NOTE">🎫 Credit Note Received (அடுத்த பில்லில் கழித்துக் கொள்வதாக வரவு பில் தந்தார்)</option>
+              <option value="REFUND_RECEIVED">💵 Cash / Bank Refund Received (பணம் திரும்பக் கிடைத்தது)</option>
+              <option value="REPLACEMENT_RECEIVED">🔄 Replacement Received (புதிய நல்ல துணிகள் பதிலாக வந்தது)</option>
+              <option value="REJECTED_BY_SUPPLIER">❌ Rejected by Supplier (சப்ளையர் நிராகரித்துவிட்டார்)</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label for="resRecoveredAmount" style="font-size: 11px; font-weight: 700; color: #475569;">Recovered / Credited Amount (₹) *</label>
+            <input type="number" step="0.5" id="resRecoveredAmount" class="form-control" required style="font-size: 13px; font-weight: 800; color: #059669;">
+          </div>
+
+          <div class="form-group">
+            <label for="resNotes" style="font-size: 11px; font-weight: 700; color: #475569;">Resolution Notes / Credit Note No</label>
+            <input type="text" id="resNotes" class="form-control" placeholder="e.g. Credit Note #CN-8812 received for ₹420" style="font-size: 12px;">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeResolveClaimModal()">Cancel</button>
+          <button type="submit" class="btn btn-success" style="font-weight: 700;">
+            💾 Save Resolution & Recover Loss
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../js/security.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    // Security Guard
+    SecurityEngine.guardPage('ADMIN');
+
+    // Global Store
+    let allProducts = [];
+    let damagedList = [];
+    let customerReturnsList = [];
+    let supplierReturnsList = [];
+    let summaryMetrics = {};
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      document.getElementById('printTimestamp').textContent = 'Generated On: ' + new Date().toLocaleString();
+      await fetchAllData();
+    });
+
+    async function fetchAllData() {
+      const token = localStorage.getItem('rms_auth_token');
+      try {
+        allProducts = await AppStore.getProducts(token);
+        const res = await AppStore.getDamagedAndReturns(token);
+        summaryMetrics = res.summary || {};
+        damagedList = res.damagedProducts || [];
+        customerReturnsList = res.customerReturns || [];
+        supplierReturnsList = res.supplierReturns || [];
+
+        updateKpiMetrics(summaryMetrics);
+        populateProductDropdowns();
+        renderDamagedTable();
+        renderCustomerReturnsTable();
+        renderSupplierReturnsTable();
+      } catch (err) {
+        showToast('danger', 'Error loading damage & return records: ' + err.message);
+      }
+    }
+
+    function updateKpiMetrics(s) {
+      document.getElementById('kpiDamageLoss').textContent = '₹' + Number(s.totalDamageLossAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+      document.getElementById('kpiDamagedUnits').textContent = s.totalDamagedUnits || 0;
+
+      document.getElementById('kpiCustRefund').textContent = '₹' + Number(s.totalCustomerRefundAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+      document.getElementById('kpiCustCount').textContent = s.totalCustomerReturns || 0;
+
+      document.getElementById('kpiSupplierClaim').textContent = '₹' + Number(s.totalSupplierReturnClaimed || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+      document.getElementById('kpiSupplierCount').textContent = s.totalSupplierReturnsCount || 0;
+
+      document.getElementById('kpiSupplierRecovered').textContent = '₹' + Number(s.totalSupplierRecoveredAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+      document.getElementById('kpiNetLoss').textContent = '₹' + Number(s.netUnrecoveredLoss || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+      document.getElementById('badgeDamagedCount').textContent = damagedList.length;
+      document.getElementById('badgeCustomerCount').textContent = customerReturnsList.length;
+      document.getElementById('badgeSupplierCount').textContent = supplierReturnsList.length;
+    }
+
+    function populateProductDropdowns() {
+      const dmgSelect = document.getElementById('dmgProductSelect');
+      const crtSelect = document.getElementById('crtProductSelect');
+
+      dmgSelect.innerHTML = '<option value="">-- Choose Product --</option>';
+      crtSelect.innerHTML = '<option value="">-- Choose Product --</option>';
+
+      allProducts.forEach(p => {
+        const text = `${p.name} (${p.size || 'Std'}, ${p.color || 'Std'}) - SKU: ${p.sku || p.barcode}`;
+        dmgSelect.innerHTML += `<option value="${p.id}">${text}</option>`;
+        crtSelect.innerHTML += `<option value="${p.id}">${text}</option>`;
+      });
+    }
+
+    // ================= TAB SWITCHING =================
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    // ================= RENDER TAB 1: DAMAGED TABLE =================
+    function renderDamagedTable() {
+      const search = (document.getElementById('damageSearchInput').value || '').trim().toLowerCase();
+      const statusFilter = document.getElementById('damageFilterStatus').value;
+
+      const tbody = document.getElementById('damagedTableBody');
+      tbody.innerHTML = '';
+
+      const filtered = damagedList.filter(d => {
+        const matchesSearch = !search || 
+          d.productName.toLowerCase().includes(search) || 
+          (d.sku && d.sku.toLowerCase().includes(search)) ||
+          (d.damageReason && d.damageReason.toLowerCase().includes(search)) ||
+          (d.supplierName && d.supplierName.toLowerCase().includes(search));
+
+        const matchesStatus = statusFilter === 'ALL' || d.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: #64748b; padding: 30px;">No damaged product records found</td></tr>`;
+        return;
+      }
+
+      filtered.forEach(d => {
+        let badge = '';
+        if (d.status === 'PENDING_ACTION') badge = '<span class="status-badge badge-red">🚨 Action Pending</span>';
+        else if (d.status === 'RETURNED_TO_SUPPLIER') badge = '<span class="status-badge badge-blue">🏬 Returned to Vendor</span>';
+        else if (d.status === 'WRITTEN_OFF_SCRAP') badge = '<span class="status-badge badge-gray">🗑️ Written Off</span>';
+        else if (d.status === 'REPAIRED_DISCOUNT_SALE') badge = '<span class="status-badge badge-green">🔄 Repaired / Sold</span>';
+
+        const dDate = new Date(d.createdAt).toLocaleDateString();
+
+        tbody.innerHTML += `
+          <tr>
+            <td>
+              <div style="font-weight: 700; color: #1e1b4b;">${dDate}</div>
+              <small style="color: #64748b; font-family: monospace;">${d.id}</small>
+            </td>
+            <td>
+              <div style="font-weight: 700; color: #0f172a;">${d.productName}</div>
+              <small style="color: #64748b;">SKU: ${d.sku || '-'} | Barcode: ${d.barcode || '-'}</small>
+            </td>
+            <td>
+              <strong style="color: #991b1b;">${d.damageReason}</strong>
+              ${d.notes ? `<div style="font-size: 11px; color: #64748b;">${d.notes}</div>` : ''}
+            </td>
+            <td style="text-align: center; font-weight: 800; color: #dc2626;">
+              ${d.quantity} pcs
+            </td>
+            <td style="text-align: right; color: #475569;">
+              ₹${Number(d.purchasePrice || 0).toFixed(2)}
+            </td>
+            <td style="text-align: right; font-weight: 800; color: #dc2626;">
+              ₹${Number(d.lossAmount || 0).toFixed(2)}
+            </td>
+            <td>
+              <span class="status-badge badge-gray" style="font-size: 10px;">${d.damageSource || 'Shop Floor'}</span>
+            </td>
+            <td>
+              <strong>${d.supplierName || 'Not Specified'}</strong>
+            </td>
+            <td style="text-align: center;">
+              ${badge}
+            </td>
+            <td style="text-align: center;" class="no-print">
+              ${d.status === 'PENDING_ACTION' ? `
+                <button class="btn btn-outline btn-sm" onclick="quickReturnDamageToSupplier('${d.id}')" style="padding: 2px 6px; font-size: 11px; background: #eef2ff; color: #4338ca; border-color: #c7d2fe;" title="Dispatch back to Vendor">
+                  🏬 Return to Vendor
+                </button>
+              ` : `<small style="color:#64748b;">Logged</small>`}
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function resetDamageFilters() {
+      document.getElementById('damageSearchInput').value = '';
+      document.getElementById('damageFilterStatus').value = 'ALL';
+      renderDamagedTable();
+    }
+
+    // ================= RENDER TAB 2: CUSTOMER RETURNS =================
+    function renderCustomerReturnsTable() {
+      const search = (document.getElementById('custReturnSearchInput').value || '').trim().toLowerCase();
+      const condFilter = document.getElementById('custReturnFilterCondition').value;
+
+      const tbody = document.getElementById('customerReturnsTableBody');
+      tbody.innerHTML = '';
+
+      const filtered = customerReturnsList.filter(c => {
+        const matchesSearch = !search || 
+          c.productName.toLowerCase().includes(search) || 
+          (c.invoiceNo && c.invoiceNo.toLowerCase().includes(search)) ||
+          (c.customerName && c.customerName.toLowerCase().includes(search)) ||
+          (c.customerMobile && c.customerMobile.includes(search));
+
+        const matchesCond = condFilter === 'ALL' || c.itemCondition === condFilter;
+        return matchesSearch && matchesCond;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: #64748b; padding: 30px;">No customer returns recorded</td></tr>`;
+        return;
+      }
+
+      filtered.forEach(c => {
+        const condBadge = c.itemCondition === 'GOOD_CONDITION_RESTOCK' ? 
+          '<span class="status-badge badge-green">✅ Good (Restocked)</span>' : 
+          '<span class="status-badge badge-red">🚨 Defective (To Damage)</span>';
+
+        tbody.innerHTML += `
+          <tr>
+            <td>${new Date(c.createdAt).toLocaleDateString()}</td>
+            <td><strong>${c.invoiceNo || 'N/A'}</strong></td>
+            <td><strong>${c.productName}</strong></td>
+            <td style="text-align: center; font-weight: 700;">${c.quantity}</td>
+            <td style="text-align: right; font-weight: 800; color: #d97706;">₹${Number(c.refundAmount || 0).toFixed(2)}</td>
+            <td><span class="status-badge badge-blue">${c.refundMethod || 'CASH'}</span></td>
+            <td>${condBadge}</td>
+            <td>${c.customerName || 'Customer'} ${c.customerMobile ? `(${c.customerMobile})` : ''}</td>
+            <td style="color: #64748b;">${c.returnReason || '-'}</td>
+            <td><small>${c.recordedBy || 'admin'}</small></td>
+          </tr>
+        `;
+      });
+    }
+
+    function resetCustomerReturnFilters() {
+      document.getElementById('custReturnSearchInput').value = '';
+      document.getElementById('custReturnFilterCondition').value = 'ALL';
+      renderCustomerReturnsTable();
+    }
+
+    // ================= RENDER TAB 3: SUPPLIER RETURNS (RTV) =================
+    function renderSupplierReturnsTable() {
+      const search = (document.getElementById('rtvSearchInput').value || '').trim().toLowerCase();
+      const statusFilter = document.getElementById('rtvFilterStatus').value;
+
+      const tbody = document.getElementById('supplierReturnsTableBody');
+      tbody.innerHTML = '';
+
+      const filtered = supplierReturnsList.filter(r => {
+        const matchesSearch = !search || 
+          r.supplierName.toLowerCase().includes(search) || 
+          (r.originalInvoiceNo && r.originalInvoiceNo.toLowerCase().includes(search)) ||
+          (r.trackingNo && r.trackingNo.toLowerCase().includes(search));
+
+        const matchesStatus = statusFilter === 'ALL' || r.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: #64748b; padding: 30px;">No supplier returns (RTV) records found</td></tr>`;
+        return;
+      }
+
+      filtered.forEach(r => {
+        let badge = '';
+        if (r.status === 'RETURN_DISPATCHED') badge = '<span class="status-badge badge-blue">🚚 Dispatched</span>';
+        else if (r.status === 'SUPPLIER_CREDIT_NOTE') badge = '<span class="status-badge badge-green">🎫 Credit Note</span>';
+        else if (r.status === 'REFUND_RECEIVED') badge = '<span class="status-badge badge-emerald">💵 Cash Refund</span>';
+        else if (r.status === 'REPLACEMENT_RECEIVED') badge = '<span class="status-badge badge-purple">🔄 Replacement</span>';
+        else if (r.status === 'REJECTED_BY_SUPPLIER') badge = '<span class="status-badge badge-red">❌ Rejected</span>';
+
+        const itemsList = (r.items || []).map(i => `${i.productName} (${i.quantity} pcs @ ₹${i.purchasePrice})`).join('<br>');
+
+        tbody.innerHTML += `
+          <tr>
+            <td>
+              <strong>${new Date(r.dispatchDate || r.createdAt).toLocaleDateString()}</strong>
+              <div style="font-size: 10px; color: #64748b; font-family: monospace;">${r.id}</div>
+            </td>
+            <td>
+              <strong style="color: #1e1b4b;">${r.supplierName}</strong>
+              ${r.supplierMobile ? `<div style="font-size: 11px; color: #64748b;">${r.supplierMobile}</div>` : ''}
+            </td>
+            <td><strong>${r.originalInvoiceNo || '-'}</strong></td>
+            <td style="font-size: 11px;">${itemsList || '-'}</td>
+            <td style="text-align: right; font-weight: 800; color: #0284c7;">
+              ₹${Number(r.totalReturnAmount || 0).toFixed(2)}
+            </td>
+            <td>
+              <div>${r.courierName || 'Direct'}</div>
+              <small style="color: #64748b; font-family: monospace;">${r.trackingNo || '-'}</small>
+            </td>
+            <td style="text-align: center;">
+              ${badge}
+            </td>
+            <td style="text-align: right; font-weight: 800; color: #059669;">
+              ₹${Number(r.recoveredAmount || 0).toFixed(2)}
+            </td>
+            <td style="font-size: 11px; color: #475569;">${r.resolutionNotes || '-'}</td>
+            <td style="text-align: center;" class="no-print">
+              <button class="btn btn-outline btn-sm" onclick="openResolveClaimModal('${r.id}')" style="padding: 3px 6px; font-size: 11px; color: #059669; border-color: #a7f3d0;" title="Record Credit Note / Refund">
+                📝 Update Claim
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function resetRtvFilters() {
+      document.getElementById('rtvSearchInput').value = '';
+      document.getElementById('rtvFilterStatus').value = 'ALL';
+      renderSupplierReturnsTable();
+    }
+
+    // ================= MODAL CONTROLLERS =================
+    // 1. Record Damaged Product
+    function openRecordDamageModal(preselectedProductId = null) {
+      document.getElementById('recordDamageForm').reset();
+      document.getElementById('damageModalAlert').style.display = 'none';
+
+      if (preselectedProductId) {
+        document.getElementById('dmgProductSelect').value = preselectedProductId;
+        onDmgProductChange();
+      } else {
+        document.getElementById('dmgProductPreview').style.display = 'none';
+      }
+      calcDmgLoss();
+      document.getElementById('recordDamageModal').classList.add('show');
+    }
+
+    function closeRecordDamageModal() {
+      document.getElementById('recordDamageModal').classList.remove('show');
+    }
+
+    function onDmgProductChange() {
+      const pId = document.getElementById('dmgProductSelect').value;
+      const preview = document.getElementById('dmgProductPreview');
+      const prod = allProducts.find(p => p.id === pId);
+
+      if (prod) {
+        preview.style.display = 'block';
+        document.getElementById('dmgPrevStock').textContent = prod.stockQuantity || 0;
+        document.getElementById('dmgPrevCost').textContent = '₹' + Number(prod.purchasePrice || 0).toFixed(2);
+        document.getElementById('dmgPrevSupplier').textContent = prod.supplierName || 'Wholesale Supplier';
+        if (!document.getElementById('dmgSupplierName').value && prod.supplierName) {
+          document.getElementById('dmgSupplierName').value = prod.supplierName;
+        }
+        calcDmgLoss();
+      } else {
+        preview.style.display = 'none';
+      }
+    }
+
+    function calcDmgLoss() {
+      const pId = document.getElementById('dmgProductSelect').value;
+      const prod = allProducts.find(p => p.id === pId);
+      const qty = parseInt(document.getElementById('dmgQuantity').value, 10) || 0;
+      const rate = prod ? Number(prod.purchasePrice || 0) : 0;
+      const loss = qty * rate;
+      document.getElementById('dmgCalculatedLoss').textContent = '₹' + loss.toFixed(2);
+    }
+
+    async function submitDamagedProduct(event) {
+      event.preventDefault();
+      const token = localStorage.getItem('rms_auth_token');
+      const btn = document.getElementById('btnSaveDamage');
+      btn.disabled = true;
+
+      const data = {
+        productId: document.getElementById('dmgProductSelect').value,
+        quantity: parseInt(document.getElementById('dmgQuantity').value, 10),
+        damageReason: document.getElementById('dmgReason').value,
+        damageSource: document.getElementById('dmgSource').value,
+        supplierName: document.getElementById('dmgSupplierName').value,
+        notes: document.getElementById('dmgNotes').value
+      };
+
+      try {
+        await AppStore.recordDamagedProduct(token, data);
+        closeRecordDamageModal();
+        showToast('success', `✅ Damaged product recorded! ${data.quantity} pcs deducted from sellable stock.`);
+        await fetchAllData();
+      } catch (err) {
+        const al = document.getElementById('damageModalAlert');
+        al.textContent = err.message;
+        al.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // 2. Customer Return Modal
+    function openCustomerReturnModal() {
+      document.getElementById('customerReturnForm').reset();
+      document.getElementById('custModalAlert').style.display = 'none';
+      calcCrtRefund();
+      document.getElementById('customerReturnModal').classList.add('show');
+    }
+
+    function closeCustomerReturnModal() {
+      document.getElementById('customerReturnModal').classList.remove('show');
+    }
+
+    function onCrtProductChange() {
+      calcCrtRefund();
+    }
+
+    function calcCrtRefund() {
+      const pId = document.getElementById('crtProductSelect').value;
+      const prod = allProducts.find(p => p.id === pId);
+      const qty = parseInt(document.getElementById('crtQuantity').value, 10) || 0;
+      if (prod) {
+        const total = (Number(prod.sellingPrice) || 0) * qty;
+        document.getElementById('crtRefundAmount').value = total.toFixed(2);
+      }
+    }
+
+    async function submitCustomerReturn(event) {
+      event.preventDefault();
+      const token = localStorage.getItem('rms_auth_token');
+      const btn = document.getElementById('btnSaveCustReturn');
+      btn.disabled = true;
+
+      const data = {
+        invoiceNo: document.getElementById('crtInvoiceNo').value,
+        productId: document.getElementById('crtProductSelect').value,
+        quantity: parseInt(document.getElementById('crtQuantity').value, 10),
+        refundAmount: parseFloat(document.getElementById('crtRefundAmount').value),
+        itemCondition: document.getElementById('crtCondition').value,
+        refundMethod: document.getElementById('crtRefundMethod').value,
+        customerName: document.getElementById('crtCustName').value,
+        customerMobile: document.getElementById('crtCustMobile').value,
+        returnReason: document.getElementById('crtReason').value
+      };
+
+      try {
+        await AppStore.recordCustomerReturn(token, data);
+        closeCustomerReturnModal();
+        showToast('success', `✅ Customer return processed (${data.itemCondition === 'GOOD_CONDITION_RESTOCK' ? 'Restocked to Available Stock' : 'Logged into Damaged Goods for RTV'})!`);
+        await fetchAllData();
+      } catch (err) {
+        const al = document.getElementById('custModalAlert');
+        al.textContent = err.message;
+        al.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // 3. Supplier Return (RTV) Modal
+    function openSupplierReturnModal(filterDamageId = null) {
+      document.getElementById('supplierReturnForm').reset();
+      document.getElementById('rtvModalAlert').style.display = 'none';
+
+      // Populate damaged items for return selection
+      const cont = document.getElementById('rtvItemSelectionContainer');
+      cont.innerHTML = '';
+
+      const pendingDamages = damagedList.filter(d => d.status === 'PENDING_ACTION');
+      if (pendingDamages.length === 0) {
+        cont.innerHTML = `<div style="color: #64748b; font-size: 12px; padding: 4px;">No pending damaged items found in register. You can choose from active products below.</div>`;
+      } else {
+        pendingDamages.forEach(d => {
+          const isChecked = filterDamageId && filterDamageId === d.id ? 'checked' : '';
+          cont.innerHTML += `
+            <label style="display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; border-bottom: 1px solid #e2e8f0; cursor: pointer;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" name="rtvItemCheckbox" value="${d.productId}" data-damage-id="${d.id}" data-qty="${d.quantity}" data-price="${d.purchasePrice}" data-supplier="${d.supplierName || ''}" onchange="calcRtvTotal()" ${isChecked}>
+                <span style="font-weight: 700; color: #0f172a;">${d.productName} (${d.quantity} pcs) - Reason: ${d.damageReason}</span>
+              </div>
+              <span style="font-weight: 800; color: #dc2626;">₹${Number(d.lossAmount || 0).toFixed(2)}</span>
+            </label>
+          `;
+        });
+      }
+
+      calcRtvTotal();
+      document.getElementById('supplierReturnModal').classList.add('show');
+    }
+
+    function closeSupplierReturnModal() {
+      document.getElementById('supplierReturnModal').classList.remove('show');
+    }
+
+    function quickReturnDamageToSupplier(damageId) {
+      const dmg = damagedList.find(d => d.id === damageId);
+      if (dmg && dmg.supplierName) {
+        document.getElementById('rtvSupplierName').value = dmg.supplierName;
+      }
+      openSupplierReturnModal(damageId);
+    }
+
+    function calcRtvTotal() {
+      const checkboxes = document.querySelectorAll('input[name="rtvItemCheckbox"]:checked');
+      let total = 0;
+      checkboxes.forEach(cb => {
+        const qty = parseInt(cb.getAttribute('data-qty'), 10) || 1;
+        const price = parseFloat(cb.getAttribute('data-price')) || 0;
+        total += (qty * price);
+
+        const sup = cb.getAttribute('data-supplier');
+        if (sup && !document.getElementById('rtvSupplierName').value) {
+          document.getElementById('rtvSupplierName').value = sup;
+        }
+      });
+      document.getElementById('rtvTotalClaimDisplay').textContent = '₹' + total.toFixed(2);
+    }
+
+    async function submitSupplierReturn(event) {
+      event.preventDefault();
+      const token = localStorage.getItem('rms_auth_token');
+      const btn = document.getElementById('btnSaveRtv');
+      btn.disabled = true;
+
+      const checkboxes = document.querySelectorAll('input[name="rtvItemCheckbox"]:checked');
+      if (checkboxes.length === 0) {
+        const al = document.getElementById('rtvModalAlert');
+        al.textContent = 'Please select at least one garment item to return to supplier.';
+        al.style.display = 'block';
+        btn.disabled = false;
+        return;
+      }
+
+      const items = [];
+      checkboxes.forEach(cb => {
+        items.push({
+          productId: cb.value,
+          damageId: cb.getAttribute('data-damage-id') || '',
+          quantity: parseInt(cb.getAttribute('data-qty'), 10) || 1,
+          purchasePrice: parseFloat(cb.getAttribute('data-price')) || 0
+        });
+      });
+
+      const data = {
+        supplierName: document.getElementById('rtvSupplierName').value,
+        supplierMobile: document.getElementById('rtvSupplierMobile').value,
+        originalInvoiceNo: document.getElementById('rtvOriginalInvoice').value,
+        returnReason: document.getElementById('rtvReason').value,
+        courierName: document.getElementById('rtvCourierName').value,
+        trackingNo: document.getElementById('rtvTrackingNo').value,
+        notes: document.getElementById('rtvNotes').value,
+        items
+      };
+
+      try {
+        await AppStore.createSupplierReturn(token, data);
+        closeSupplierReturnModal();
+        showToast('success', `🚚 Supplier Return (RTV) of ${items.length} item types dispatched to "${data.supplierName}"!`);
+        await fetchAllData();
+      } catch (err) {
+        const al = document.getElementById('rtvModalAlert');
+        al.textContent = err.message;
+        al.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // 4. Update Supplier Claim Resolution Modal
+    function openResolveClaimModal(rtvId) {
+      const rtv = supplierReturnsList.find(r => r.id === rtvId);
+      if (!rtv) return;
+
+      document.getElementById('resolveRtvId').value = rtv.id;
+      document.getElementById('resSupplierName').textContent = rtv.supplierName;
+      document.getElementById('resClaimAmount').textContent = '₹' + Number(rtv.totalReturnAmount || 0).toFixed(2);
+      document.getElementById('resRecoveredAmount').value = rtv.recoveredAmount || rtv.totalReturnAmount || 0;
+      document.getElementById('resStatus').value = rtv.status === 'RETURN_DISPATCHED' ? 'SUPPLIER_CREDIT_NOTE' : rtv.status;
+      document.getElementById('resNotes').value = rtv.resolutionNotes || '';
+
+      document.getElementById('resolveClaimModal').classList.add('show');
+    }
+
+    function closeResolveClaimModal() {
+      document.getElementById('resolveClaimModal').classList.remove('show');
+    }
+
+    async function submitClaimResolution(event) {
+      event.preventDefault();
+      const token = localStorage.getItem('rms_auth_token');
+      const rtvId = document.getElementById('resolveRtvId').value;
+
+      const data = {
+        status: document.getElementById('resStatus').value,
+        recoveredAmount: parseFloat(document.getElementById('resRecoveredAmount').value),
+        resolutionNotes: document.getElementById('resNotes').value
+      };
+
+      try {
+        await AppStore.updateSupplierReturnStatus(token, rtvId, data);
+        closeResolveClaimModal();
+        showToast('success', `💰 Supplier claim updated! Recovered ₹${data.recoveredAmount.toFixed(2)} to offset store loss.`);
+        await fetchAllData();
+      } catch (err) {
+        alert('Error updating claim: ' + err.message);
+      }
+    }
+
+    function showToast(type, msg) {
+      const box = document.getElementById('toastAlert');
+      box.className = `alert alert-${type}`;
+      box.textContent = msg;
+      box.style.display = 'block';
+      setTimeout(() => { box.style.display = 'none'; }, 4000);
+    }
+  </script>
+</body>
+</html>

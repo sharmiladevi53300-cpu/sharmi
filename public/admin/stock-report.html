@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Valuation & Inward Purchases - Admin Panel</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    :root {
+      --primary: #4338ca;
+      --primary-dark: #312e81;
+      --primary-light: #e0e7ff;
+      --success: #059669;
+      --success-light: #d1fae5;
+      --warning: #d97706;
+      --warning-light: #fef3c7;
+      --danger: #dc2626;
+      --danger-light: #fee2e2;
+      --info: #0284c7;
+      --info-light: #e0f2fe;
+    }
+
+    body {
+      background: #f1f5f9;
+      color: #0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .report-wrapper {
+      max-width: 1400px;
+      margin: 16px auto;
+      padding: 0 16px 40px 16px;
+    }
+
+    /* Page Header Card */
+    .page-header-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+    .page-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .page-title h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+      color: #1e1b4b;
+    }
+    .page-subtitle {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* KPI Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .stat-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+    }
+    .stat-card.card-blue::before { background: var(--info); }
+    .stat-card.card-green::before { background: var(--success); }
+    .stat-card.card-indigo::before { background: var(--primary); }
+    .stat-card.card-amber::before { background: var(--warning); }
+    .stat-card.card-emerald::before { background: #10b981; }
+
+    .stat-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .stat-card h4 {
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #64748b;
+      margin: 0;
+      letter-spacing: 0.5px;
+    }
+    .stat-card .stat-icon {
+      font-size: 18px;
+    }
+    .stat-card .value {
+      font-size: 22px;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.2;
+    }
+    .stat-card .sub-detail {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 6px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Filter Card */
+    .filter-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .filter-group label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    /* Valuation Table Styles */
+    .table-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .table-card-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      background: #fafafa;
+    }
+    .table-card-header h3 {
+      font-size: 15px;
+      font-weight: 800;
+      margin: 0;
+      color: #1e1b4b;
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+      max-height: 650px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      text-align: left;
+    }
+    th {
+      background: #f8fafc;
+      color: #334155;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
+    }
+    tr:hover td {
+      background-color: #f8fafc;
+    }
+
+    /* Product Cell */
+    .prod-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .prod-thumb {
+      width: 42px;
+      height: 42px;
+      border-radius: 6px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      flex-shrink: 0;
+    }
+    .prod-meta {
+      display: flex;
+      flex-direction: column;
+    }
+    .prod-title {
+      font-weight: 700;
+      color: #0f172a;
+      font-size: 13px;
+    }
+    .prod-variants {
+      font-size: 11px;
+      color: #64748b;
+    }
+    .prod-codes {
+      font-size: 10px;
+      color: #475569;
+      margin-top: 2px;
+      font-family: monospace;
+    }
+
+    /* Badges */
+    .stock-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 11px;
+    }
+    .pill-green { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .pill-red { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+    .pill-dark { background: #334155; color: #ffffff; border: 1px solid #1e293b; }
+    .pill-blue { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+
+    .calc-tag {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .calc-inward { background: #f0fdf4; color: #166534; }
+    .calc-sold { background: #fef2f2; color: #991b1b; }
+    .calc-initial { background: #f8fafc; color: #475569; }
+
+    /* Modals */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .modal-overlay.show {
+      display: flex;
+    }
+    .modal-box {
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+      width: 100%;
+      max-width: 680px;
+      overflow: hidden;
+      animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .modal-box.large {
+      max-width: 950px;
+    }
+    @keyframes modalPop {
+      0% { opacity: 0; transform: scale(0.96) translateY(8px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal-header {
+      padding: 16px 20px;
+      background: #1e1b4b;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .modal-body {
+      padding: 20px;
+      max-height: 75vh;
+      overflow-y: auto;
+    }
+    .modal-footer {
+      padding: 14px 20px;
+      background: #f8fafc;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    @media (max-width: 600px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Print Styles */
+    @media print {
+      body {
+        background: white !important;
+        color: black !important;
+      }
+      .top-navbar, .page-header-card, .filter-card, .btn, .no-print, .modal-overlay {
+        display: none !important;
+      }
+      .report-wrapper {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      .print-header {
+        display: block !important;
+        margin-bottom: 20px;
+        text-align: center;
+        border-bottom: 2px solid #0f172a;
+        padding-bottom: 12px;
+      }
+      .table-card {
+        box-shadow: none !important;
+        border: none !important;
+      }
+      .table-responsive {
+        max-height: none !important;
+        overflow: visible !important;
+      }
+      table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+        font-size: 10px !important;
+      }
+      th, td {
+        border: 1px solid #94a3b8 !important;
+        padding: 6px 8px !important;
+      }
+      th {
+        background: #e2e8f0 !important;
+        color: black !important;
+      }
+      .print-audit-footer {
+        display: block !important;
+        margin-top: 40px;
+      }
+    }
+    .print-header, .print-audit-footer {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <header class="top-navbar" style="background: #1e1b4b; color: white; border-bottom: none;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="font-size: 24px;">📈</div>
+      <div>
+        <div style="font-weight: 800; font-size: 15px; color: #fff;">Stock Valuation & Inward Purchases</div>
+        <div style="font-size: 11px; color: #a5b4fc;">ADMIN PANEL &bull; ஸ்டாக் வேல்யுவேஷன் & சப்ளையர் கொள்முதல் மேலாண்மை</div>
+      </div>
+    </div>
+
+    <div class="user-menu">
+      <button class="btn btn-outline btn-sm" onclick="window.location.href='index.html'" style="background:#312e81; color:#fff; border-color:#4338ca;">
+        🔙 POS Dashboard
+      </button>
+      <button class="btn btn-outline btn-sm" onclick="window.location.href='bills.html'" style="background:#059669; color:#fff; border-color:#10b981; font-weight:700;">
+        🧾 Bill Management
+      </button>
+      <button class="btn btn-outline btn-sm" onclick="window.location.href='products.html'" style="background:#0369a1; color:#fff; border-color:#0284c7;">
+        👚 Product Registration
+      </button>
+      <button class="btn btn-outline btn-sm" onclick="window.location.href='barcode-labels.html'" style="background:#4f46e5; color:#fff; border-color:#818cf8; font-weight:700;">
+        🏷️ Barcode Labels
+      </button>
+      <button class="btn btn-outline btn-sm" onclick="window.location.href='damaged-returns.html'" style="background:#be123c; color:#fff; border-color:#e11d48; font-weight:700;">
+        🚨 Damage & Returns
+      </button>
+      <button class="btn btn-danger btn-sm" onclick="logout()">
+        Sign Out 🚪
+      </button>
+    </div>
+  </header>
+
+  <div class="report-wrapper">
+    <!-- Print Only Header -->
+    <div class="print-header">
+      <h1 style="margin: 0; font-size: 22px; font-weight: 800;">READYMADE CLOTHING SHOP</h1>
+      <div style="font-size: 13px; color: #475569; margin: 4px 0;">Official Stock Valuation & Supplier Inward Audit Statement</div>
+      <div style="font-size: 11px; color: #64748b;" id="printReportTimestamp">Generated On: -</div>
+    </div>
+
+    <!-- Page Header & Action Bar -->
+    <div class="page-header-card no-print">
+      <div class="page-title">
+        <span style="font-size: 28px;">📊</span>
+        <div>
+          <h2>Stock Valuation & Supplier Purchases</h2>
+          <div class="page-subtitle">Track Initial Stock, New Inward Purchases from Vendors, Sold POS Stock & Live Valuations</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-success btn-sm" onclick="openNewPurchaseModal()" style="font-weight: 700; display: flex; align-items: center; gap: 6px;">
+          <span>➕</span> Record Supplier Inward Purchase (புதிய கொள்முதல்)
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="openPurchasesLedgerModal()" style="background: #ffffff; color: #1e1b4b; border-color: #cbd5e1; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+          <span>🏬</span> Supplier Purchases Ledger
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="window.print()" style="background: #4f46e5; color: #ffffff; border-color: #4338ca; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+          <span>🖨️</span> Print Valuation Audit
+        </button>
+      </div>
+    </div>
+
+    <!-- Toast Alert Box -->
+    <div id="toastAlert" class="alert no-print" style="margin-bottom: 16px;"></div>
+
+    <!-- Summary KPI Cards -->
+    <div class="stats-grid">
+      <!-- Total Stock & Product Count -->
+      <div class="stat-card card-blue">
+        <div class="stat-card-header">
+          <h4>Live On-Hand Stock (மொத்த இருப்பு)</h4>
+          <span class="stat-icon">📦</span>
+        </div>
+        <div class="value" id="kpiLiveStock">0 pcs</div>
+        <div class="sub-detail">
+          <span><strong>Initial:</strong> <span id="kpiInitialStock">0</span></span>
+          <span style="color: #166534;"><strong>Inward:</strong> +<span id="kpiInwardStock">0</span></span>
+          <span style="color: #991b1b;"><strong>Sold:</strong> -<span id="kpiSoldStock">0</span></span>
+        </div>
+      </div>
+
+      <!-- Total Cost Valuation -->
+      <div class="stat-card card-indigo">
+        <div class="stat-card-header">
+          <h4>Cost Valuation (கொள்முதல் மதிப்பு)</h4>
+          <span class="stat-icon">🏷️</span>
+        </div>
+        <div class="value" id="kpiCostValuation" style="color: #312e81;">₹0.00</div>
+        <div class="sub-detail">
+          <span>Based on unit purchase cost rate</span>
+        </div>
+      </div>
+
+      <!-- Total Selling Valuation -->
+      <div class="stat-card card-emerald">
+        <div class="stat-card-header">
+          <h4>Retail Valuation (விற்பனை மதிப்பு)</h4>
+          <span class="stat-icon">💰</span>
+        </div>
+        <div class="value" id="kpiSellingValuation" style="color: #059669;">₹0.00</div>
+        <div class="sub-detail">
+          <span>Based on current selling retail price</span>
+        </div>
+      </div>
+
+      <!-- Expected Gross Profit Margin -->
+      <div class="stat-card card-green">
+        <div class="stat-card-header">
+          <h4>Expected Gross Margin (எதிர்பார்க்கும் லாபம்)</h4>
+          <span class="stat-icon">📈</span>
+        </div>
+        <div class="value" id="kpiGrossMargin" style="color: #047857;">₹0.00</div>
+        <div class="sub-detail">
+          <span id="kpiMarginPercentBadge" style="font-weight: 700; color: #065f46;">0.0% Margin</span>
+        </div>
+      </div>
+
+      <!-- Supplier Purchases Spending -->
+      <div class="stat-card card-amber">
+        <div class="stat-card-header">
+          <h4>Supplier Inward Bills (சப்ளையர் பில்கள்)</h4>
+          <span class="stat-icon">🏬</span>
+        </div>
+        <div class="value" id="kpiInwardSpending" style="color: #b45309;">₹0.00</div>
+        <div class="sub-detail">
+          <span>Total Inward Bills: <strong id="kpiPurchasesCount">0</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters & Search Bar -->
+    <div class="filter-card no-print">
+      <div class="filter-group" style="flex: 1; min-width: 220px;">
+        <label for="searchInput">🔍 Search Product / SKU / Barcode</label>
+        <input type="text" id="searchInput" class="form-control" placeholder="Search by name, SKU, barcode..." style="height: 36px; font-size: 13px;">
+      </div>
+
+      <div class="filter-group" style="min-width: 180px;">
+        <label for="filterCategory">📁 Category</label>
+        <select id="filterCategory" class="form-control" style="height: 36px; font-size: 12px;">
+          <option value="ALL">All Categories</option>
+        </select>
+      </div>
+
+      <div class="filter-group" style="min-width: 180px;">
+        <label for="filterStockLevel">⚠️ Stock Level</label>
+        <select id="filterStockLevel" class="form-control" style="height: 36px; font-size: 12px;">
+          <option value="ALL">All Levels</option>
+          <option value="INSTOCK">In Stock (Qty >= 5)</option>
+          <option value="LOWSTOCK">Low Stock Alert (Qty < 5)</option>
+          <option value="OUTOFSTOCK">Out of Stock (Qty = 0)</option>
+        </select>
+      </div>
+
+      <div class="filter-group" style="min-width: 180px;">
+        <label for="sortBy">🔄 Sort By</label>
+        <select id="sortBy" class="form-control" style="height: 36px; font-size: 12px;">
+          <option value="val_desc">Selling Valuation (High → Low)</option>
+          <option value="val_asc">Selling Valuation (Low → High)</option>
+          <option value="stock_desc">Available Stock (High → Low)</option>
+          <option value="stock_asc">Available Stock (Low → High)</option>
+          <option value="margin_desc">Profit Margin % (High → Low)</option>
+          <option value="name_asc">Product Name (A → Z)</option>
+        </select>
+      </div>
+
+      <div style="margin-top: 18px;">
+        <button class="btn btn-outline btn-sm" onclick="resetFilters()" style="height: 36px; padding: 0 12px;">
+          Reset Filters
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Stock Valuation Table -->
+    <div class="table-card">
+      <div class="table-card-header no-print">
+        <div>
+          <h3>Stock Valuation Directory & Movement Audit</h3>
+          <span style="font-size: 11px; color: #64748b;">Formula: Initial Stock + Inward Purchases - POS Sales = Live Available Stock</span>
+        </div>
+        <div style="font-size: 12px; font-weight: 700; color: #4338ca;">
+          Showing <span id="displayCount">0</span> of <span id="totalItemsCount">0</span> Items
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th style="min-width: 220px;">Product & Details</th>
+              <th>Category</th>
+              <th style="text-align: center; background: #f8fafc;">Initial<br><small style="color:#64748b;">தொடக்க இருப்பு</small></th>
+              <th style="text-align: center; background: #f0fdf4;">Inward (+)<br><small style="color:#166534;">புதிய கொள்முதல்</small></th>
+              <th style="text-align: center; background: #fef2f2;">Sold (-)<br><small style="color:#991b1b;">விற்பனையானது</small></th>
+              <th style="text-align: center; background: #eff6ff;">Available (=)<br><small style="color:#1e40af;">தற்போதைய இருப்பு</small></th>
+              <th style="text-align: right;">Cost Valuation<br><small style="color:#64748b;">கொள்முதல் மதிப்பு</small></th>
+              <th style="text-align: right;">Retail Valuation<br><small style="color:#64748b;">விற்பனை மதிப்பு</small></th>
+              <th style="text-align: right;">Gross Margin<br><small style="color:#64748b;">எதிர்பார்க்கும் லாபம்</small></th>
+              <th style="text-align: center;" class="no-print">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="valuationTableBody">
+            <!-- Populated via JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Print Only Audit Footer -->
+    <div class="print-audit-footer">
+      <div style="display: flex; justify-content: space-between; margin-top: 50px; font-size: 12px;">
+        <div style="text-align: center; width: 200px;">
+          <div style="border-top: 1px solid #000; padding-top: 6px; font-weight: 700;">Stock Verifier / Manager</div>
+        </div>
+        <div style="text-align: center; width: 200px;">
+          <div style="border-top: 1px solid #000; padding-top: 6px; font-weight: 700;">Shop Owner / Administrator</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 1: RECORD SUPPLIER INWARD PURCHASE ================= -->
+  <div id="newPurchaseModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 20px;">➕</span>
+          <h3>Record Supplier Inward Purchase (புதிய கொள்முதல் பதிவு)</h3>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="closeNewPurchaseModal()" style="color: white; border-color: rgba(255,255,255,0.4); padding: 2px 8px;">✕</button>
+      </div>
+      <form id="newPurchaseForm" onsubmit="submitSupplierPurchase(event)">
+        <div class="modal-body">
+          <div id="modalPurchaseAlert" class="alert" style="display: none; margin-bottom: 12px;"></div>
+
+          <!-- Product Selection -->
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label for="pchProductSelect" style="font-size: 12px; font-weight: 700; color: #1e1b4b;">Select Apparel Product *</label>
+            <select id="pchProductSelect" class="form-control" required style="font-size: 13px; padding: 8px 12px;" onchange="onPurchaseProductChange()">
+              <option value="">-- Choose Product --</option>
+            </select>
+          </div>
+
+          <!-- Product Quick Meta Preview -->
+          <div id="pchProductPreview" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 14px; font-size: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong>SKU:</strong> <span id="prevSku">-</span> &bull; 
+                <strong>Barcode:</strong> <span id="prevBarcode">-</span>
+              </div>
+              <div>
+                <span class="stock-pill pill-blue">Current Available: <strong id="prevStock" style="margin-left: 2px;">0</strong> pcs</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Supplier Name & Mobile (யார்கிட்ட வாங்கினோம்) -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="pchSupplierName" style="font-size: 11px; font-weight: 700; color: #475569;">Supplier / Vendor Name (யார்கிட்ட வாங்கினோம்) *</label>
+              <input type="text" id="pchSupplierName" class="form-control" required placeholder="e.g. Sri Balaji Textiles, Surat Mills" style="font-size: 13px;">
+            </div>
+            <div class="form-group">
+              <label for="pchSupplierMobile" style="font-size: 11px; font-weight: 700; color: #475569;">Supplier Mobile Number</label>
+              <input type="text" id="pchSupplierMobile" class="form-control" placeholder="e.g. 9443219870" style="font-size: 13px;">
+            </div>
+          </div>
+
+          <!-- Invoice No & Purchase Date -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="pchInvoiceNo" style="font-size: 11px; font-weight: 700; color: #475569;">Supplier Bill / Invoice No (பில் எண்) *</label>
+              <input type="text" id="pchInvoiceNo" class="form-control" required placeholder="e.g. BAL-2026-99" style="font-size: 13px;">
+            </div>
+            <div class="form-group">
+              <label for="pchPurchaseDate" style="font-size: 11px; font-weight: 700; color: #475569;">Purchase Date (தேதி) *</label>
+              <input type="date" id="pchPurchaseDate" class="form-control" required style="font-size: 13px;">
+            </div>
+          </div>
+
+          <!-- Inward Quantity & Unit Cost Rate -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="pchQuantity" style="font-size: 11px; font-weight: 700; color: #475569;">Purchased Quantity (வாங்கிய அளவு) *</label>
+              <input type="number" id="pchQuantity" class="form-control" required min="1" placeholder="e.g. 15" style="font-size: 14px; font-weight: 700;" oninput="calcPurchaseTotal()">
+            </div>
+            <div class="form-group">
+              <label for="pchPurchasePrice" style="font-size: 11px; font-weight: 700; color: #475569;">Purchase Unit Rate (ஒரு பொருளின் வாங்கிய விலை ₹) *</label>
+              <input type="number" id="pchPurchasePrice" class="form-control" required min="0.01" step="0.01" placeholder="e.g. 450.00" style="font-size: 14px; font-weight: 700;" oninput="calcPurchaseTotal()">
+            </div>
+          </div>
+
+          <!-- Computed Total Amount & Payment Status -->
+          <div class="form-row" style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px; align-items: center;">
+            <div>
+              <div style="font-size: 11px; font-weight: 700; color: #166534; text-transform: uppercase;">Total Purchase Bill Amount (மொத்த தொகை)</div>
+              <div style="font-size: 22px; font-weight: 800; color: #15803d;" id="pchTotalAmountDisplay">₹0.00</div>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="pchPaymentStatus" style="font-size: 11px; font-weight: 700; color: #166534;">Payment Status</label>
+              <select id="pchPaymentStatus" class="form-control" style="font-size: 12px; font-weight: 700; background: white;">
+                <option value="PAID">PAID (செலுத்தப்பட்டது)</option>
+                <option value="PENDING">PENDING (நிலுவை)</option>
+                <option value="PARTIAL">PARTIAL (பகுதி செலுத்தியது)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="form-group" style="margin-top: 12px;">
+            <label for="pchNotes" style="font-size: 11px; font-weight: 700; color: #475569;">Batch / Purchase Notes</label>
+            <input type="text" id="pchNotes" class="form-control" placeholder="e.g. Summer festive collection batch from Surat" style="font-size: 12px;">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeNewPurchaseModal()">Cancel</button>
+          <button type="submit" class="btn btn-success" id="btnSavePurchase" style="font-weight: 700;">
+            💾 Save Inward Stock & Update Valuation
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 2: SUPPLIER PURCHASES LEDGER ================= -->
+  <div id="purchasesLedgerModal" class="modal-overlay">
+    <div class="modal-box large">
+      <div class="modal-header" style="background: #0f172a;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 20px;">🏬</span>
+          <h3>Supplier Inward Purchases Ledger (சப்ளையர் கொள்முதல் பட்டியல்)</h3>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="closePurchasesLedgerModal()" style="color: white; border-color: rgba(255,255,255,0.4); padding: 2px 8px;">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Search & Filter bar for Ledger -->
+        <div style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+          <input type="text" id="ledgerSearchInput" class="form-control" placeholder="Filter by supplier name, bill #, product..." style="flex: 1; min-width: 240px; font-size: 13px;" oninput="renderPurchasesLedger()">
+          <button class="btn btn-success btn-sm" onclick="closePurchasesLedgerModal(); openNewPurchaseModal();" style="font-weight: 700;">
+            ➕ New Purchase Entry
+          </button>
+        </div>
+
+        <div class="table-responsive" style="border: 1px solid var(--border); border-radius: 6px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Date & ID</th>
+                <th>Supplier / Vendor</th>
+                <th>Bill / Invoice #</th>
+                <th>Product Purchased</th>
+                <th style="text-align: center;">Qty</th>
+                <th style="text-align: right;">Unit Rate</th>
+                <th style="text-align: right;">Total Amount</th>
+                <th style="text-align: center;">Status</th>
+                <th>Received By</th>
+              </tr>
+            </thead>
+            <tbody id="purchasesLedgerTableBody">
+              <!-- Populated via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: space-between;">
+        <div style="font-size: 12px; color: #64748b;">
+          Total Purchases: <strong id="ledgerTotalCount">0</strong> &bull; Total Amount: <strong id="ledgerTotalSpending" style="color: #059669;">₹0.00</strong>
+        </div>
+        <button type="button" class="btn btn-outline" onclick="closePurchasesLedgerModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 3: PRODUCT STOCK TIMELINE ================= -->
+  <div id="productTimelineModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header" style="background: #0369a1;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 20px;">📜</span>
+          <h3 id="timelineProdTitle">Stock Movement Journal</h3>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="closeTimelineModal()" style="color: white; border-color: rgba(255,255,255,0.4); padding: 2px 8px;">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="timelineList" style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Populated via JavaScript -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeTimelineModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/security.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/barcode.js"></script>
+  <script>
+    // Role Security Guard
+    SecurityEngine.guardPage('ADMIN');
+
+    // Global Stores
+    let valuationItems = [];
+    let valuationSummary = {};
+    let allPurchases = [];
+    let allMovements = [];
+    let allProducts = [];
+
+    // Initialize Page
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Set today as default purchase date
+      document.getElementById('pchPurchaseDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('printReportTimestamp').textContent = 'Generated On: ' + new Date().toLocaleString();
+
+      await loadCategories();
+      await fetchValuationData();
+
+      // Bind filter events
+      document.getElementById('searchInput').addEventListener('input', renderValuationTable);
+      document.getElementById('filterCategory').addEventListener('change', renderValuationTable);
+      document.getElementById('filterStockLevel').addEventListener('change', renderValuationTable);
+      document.getElementById('sortBy').addEventListener('change', renderValuationTable);
+    });
+
+    // Load categories
+    async function loadCategories() {
+      const token = localStorage.getItem('rms_auth_token');
+      try {
+        const cats = await AppStore.getCategories(token);
+        const sel = document.getElementById('filterCategory');
+        sel.innerHTML = '<option value="ALL">All Categories</option>' + 
+          cats.map(c => `<option value="${c}">${c}</option>`).join('');
+      } catch (err) {
+        console.error('Failed to load categories', err);
+      }
+    }
+
+    // Fetch live valuation data
+    async function fetchValuationData() {
+      const token = localStorage.getItem('rms_auth_token');
+      try {
+        const res = await AppStore.getStockValuation(token);
+        valuationSummary = res.summary || {};
+        valuationItems = res.items || [];
+        
+        // Also fetch purchases and products for modals
+        allPurchases = await AppStore.getPurchases(token);
+        allMovements = await AppStore.getInventoryHistory(token);
+        allProducts = await AppStore.getProducts(token);
+
+        updateKpiCards(valuationSummary);
+        populateProductDropdown();
+        renderValuationTable();
+      } catch (err) {
+        showToast('danger', 'Error loading valuation data: ' + err.message);
+      }
+    }
+
+    // Update KPI summary cards
+    function updateKpiCards(summary) {
+      document.getElementById('kpiLiveStock').textContent = (summary.totalStockQuantity || 0) + ' pcs';
+      document.getElementById('kpiInitialStock').textContent = summary.totalInitialStock || 0;
+      document.getElementById('kpiInwardStock').textContent = summary.totalInwardStock || 0;
+      document.getElementById('kpiSoldStock').textContent = summary.totalSoldStock || 0;
+
+      document.getElementById('kpiCostValuation').textContent = '₹' + Number(summary.totalCostValuation || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+      document.getElementById('kpiSellingValuation').textContent = '₹' + Number(summary.totalSellingValuation || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+      document.getElementById('kpiGrossMargin').textContent = '₹' + Number(summary.totalPotentialMargin || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+      const cost = summary.totalCostValuation || 0;
+      const margin = summary.totalPotentialMargin || 0;
+      const marginPct = cost > 0 ? ((margin / cost) * 100).toFixed(1) : '0.0';
+      document.getElementById('kpiMarginPercentBadge').textContent = marginPct + '% Overall Profit Margin';
+
+      document.getElementById('kpiInwardSpending').textContent = '₹' + Number(summary.totalInwardSpending || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+      document.getElementById('kpiPurchasesCount').textContent = summary.totalPurchasesCount || 0;
+    }
+
+    // Populate Product Dropdown in New Purchase Modal
+    function populateProductDropdown() {
+      const select = document.getElementById('pchProductSelect');
+      select.innerHTML = '<option value="">-- Choose Product --</option>';
+      allProducts.filter(p => p.isActive).forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = `${p.name} (${p.size || 'Free Size'}, ${p.color || 'Std'}) - SKU: ${p.sku || p.barcode}`;
+        select.appendChild(opt);
+      });
+    }
+
+    // Render Valuation Table with filters & sorting
+    function renderValuationTable() {
+      const search = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+      const category = document.getElementById('filterCategory').value;
+      const stockLevel = document.getElementById('filterStockLevel').value;
+      const sort = document.getElementById('sortBy').value;
+
+      const activeItems = valuationItems.filter(v => v.isActive);
+      document.getElementById('totalItemsCount').textContent = activeItems.length;
+
+      let filtered = activeItems.filter(item => {
+        const matchesSearch = !search || 
+          item.name.toLowerCase().includes(search) || 
+          (item.sku && item.sku.toLowerCase().includes(search)) || 
+          (item.barcode && item.barcode.toLowerCase().includes(search)) ||
+          (item.category && item.category.toLowerCase().includes(search));
+
+        const matchesCat = category === 'ALL' || item.category === category;
+
+        let matchesStock = true;
+        if (stockLevel === 'INSTOCK') matchesStock = item.currentStock >= 5;
+        else if (stockLevel === 'LOWSTOCK') matchesStock = item.currentStock > 0 && item.currentStock < 5;
+        else if (stockLevel === 'OUTOFSTOCK') matchesStock = item.currentStock === 0;
+
+        return matchesSearch && matchesCat && matchesStock;
+      });
+
+      // Sort
+      filtered.sort((a, b) => {
+        if (sort === 'val_desc') return b.sellingValuation - a.sellingValuation;
+        if (sort === 'val_asc') return a.sellingValuation - b.sellingValuation;
+        if (sort === 'stock_desc') return b.currentStock - a.currentStock;
+        if (sort === 'stock_asc') return a.currentStock - b.currentStock;
+        if (sort === 'margin_desc') return b.marginPercent - a.marginPercent;
+        if (sort === 'name_asc') return a.name.localeCompare(b.name);
+        return 0;
+      });
+
+      document.getElementById('displayCount').textContent = filtered.length;
+      const tbody = document.getElementById('valuationTableBody');
+      tbody.innerHTML = '';
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="10" style="text-align: center; color: #64748b; padding: 32px;">
+              <div style="font-size: 28px; margin-bottom: 6px;">🔍</div>
+              <div style="font-weight: 600;">No apparel products match the filter criteria</div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      filtered.forEach(p => {
+        let stockBadge = '';
+        if (p.currentStock === 0) {
+          stockBadge = '<span class="stock-pill pill-dark">Out of Stock</span>';
+        } else if (p.currentStock <= p.reorderLevel) {
+          stockBadge = `<span class="stock-pill pill-red">Low Stock (${p.currentStock})</span>`;
+        } else {
+          stockBadge = `<span class="stock-pill pill-green">${p.currentStock} pcs In Stock</span>`;
+        }
+
+        const marginColor = p.marginAmount >= 0 ? '#15803d' : '#b91c1c';
+
+        tbody.innerHTML += `
+          <tr>
+            <td>
+              <div class="prod-cell">
+                <img src="${p.image || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=150'}" class="prod-thumb" alt="${p.name}">
+                <div class="prod-meta">
+                  <span class="prod-title">${p.name}</span>
+                  <span class="prod-variants">${p.size || 'Free Size'} &bull; ${p.color || 'Neutral'} &bull; ${p.quantity || '1 piece'}</span>
+                  <span class="prod-codes">SKU: ${p.sku || '-'} | Barcode: ${p.barcode || '-'}</span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="stock-pill pill-blue">${p.category || 'General'}</span>
+            </td>
+            <td style="text-align: center;">
+              <span class="calc-tag calc-initial" title="Initial Opening Stock">${p.initialStock}</span>
+            </td>
+            <td style="text-align: center;">
+              <span class="calc-tag calc-inward" style="cursor: pointer; font-weight: 700;" onclick="viewProductPurchases('${p.id}')" title="Click to view inward purchases (+)">
+                +${p.inwardStock} 🏬
+              </span>
+            </td>
+            <td style="text-align: center;">
+              <span class="calc-tag calc-sold" style="font-weight: 700;" title="Sold in POS Billing (-)">-${p.soldStock} 🧾</span>
+            </td>
+            <td style="text-align: center;">
+              <div style="font-weight: 800; font-size: 13px; color: #0f172a; margin-bottom: 2px;">
+                ${p.currentStock} pcs
+              </div>
+              <div style="font-size: 9px; color: #475569; font-family: monospace; font-weight: 700; margin-bottom: 4px;" title="Initial (${p.initialStock}) + Inward (+${p.inwardStock}) - Sold (-${p.soldStock}) = ${p.currentStock} pcs">
+                <span style="color:#64748b;">${p.initialStock}</span> <span style="color:#166534;">+${p.inwardStock}</span> <span style="color:#991b1b;">-${p.soldStock}</span> = <span style="color:#1e40af; font-weight:800;">${p.currentStock}</span>
+              </div>
+              ${stockBadge}
+            </td>
+            <td style="text-align: right;">
+              <div style="font-weight: 700; color: #1e1b4b;">₹${p.costValuation.toFixed(2)}</div>
+              <small style="color: #64748b;">@ ₹${p.purchasePrice.toFixed(2)}/pc</small>
+            </td>
+            <td style="text-align: right;">
+              <div style="font-weight: 800; color: #059669;">₹${p.sellingValuation.toFixed(2)}</div>
+              <small style="color: #64748b;">@ ₹${p.sellingPrice.toFixed(2)}/pc</small>
+            </td>
+            <td style="text-align: right;">
+              <div style="font-weight: 800; color: ${marginColor};">₹${p.marginAmount.toFixed(2)}</div>
+              <small style="font-weight: 700; color: ${marginColor};">+${p.marginPercent}%</small>
+            </td>
+            <td style="text-align: center;" class="no-print">
+              <div style="display: flex; gap: 4px; justify-content: center;">
+                <button class="btn btn-outline btn-sm" onclick="quickPurchaseProduct('${p.id}')" style="padding: 3px 6px; font-size: 11px; background: #ecfdf5; color: #047857; border-color: #a7f3d0;" title="Record Supplier Purchase">
+                  ➕ Inward
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="openProductTimeline('${p.id}')" style="padding: 3px 6px; font-size: 11px; background: #f0f9ff; color: #0369a1; border-color: #bae6fd;" title="View Stock Movement Journal">
+                  📜 Logs
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="BarcodeEngine.openLabelModal(allProducts.find(x => x.id === '${p.id}'), allProducts)" style="padding: 3px 6px; font-size: 11px; color: #4f46e5; border-color: #c7d2fe;" title="Print Barcode Label">
+                  🏷️ Label
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    // Reset Filters
+    function resetFilters() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('filterCategory').value = 'ALL';
+      document.getElementById('filterStockLevel').value = 'ALL';
+      document.getElementById('sortBy').value = 'val_desc';
+      renderValuationTable();
+    }
+
+    // ================= MODAL 1 CONTROLLER: NEW PURCHASE =================
+    function openNewPurchaseModal(preselectedProductId = null) {
+      document.getElementById('newPurchaseForm').reset();
+      document.getElementById('pchPurchaseDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('modalPurchaseAlert').style.display = 'none';
+
+      if (preselectedProductId) {
+        document.getElementById('pchProductSelect').value = preselectedProductId;
+        onPurchaseProductChange();
+      } else {
+        document.getElementById('pchProductPreview').style.display = 'none';
+      }
+
+      calcPurchaseTotal();
+      document.getElementById('newPurchaseModal').classList.add('show');
+    }
+
+    function closeNewPurchaseModal() {
+      document.getElementById('newPurchaseModal').classList.remove('show');
+    }
+
+    function quickPurchaseProduct(productId) {
+      openNewPurchaseModal(productId);
+    }
+
+    function onPurchaseProductChange() {
+      const pId = document.getElementById('pchProductSelect').value;
+      const preview = document.getElementById('pchProductPreview');
+      const prod = allProducts.find(p => p.id === pId);
+
+      if (prod) {
+        preview.style.display = 'block';
+        document.getElementById('prevSku').textContent = prod.sku || '-';
+        document.getElementById('prevBarcode').textContent = prod.barcode || '-';
+        document.getElementById('prevStock').textContent = prod.stockQuantity || 0;
+        document.getElementById('pchPurchasePrice').value = prod.purchasePrice || (prod.sellingPrice * 0.6);
+        calcPurchaseTotal();
+      } else {
+        preview.style.display = 'none';
+      }
+    }
+
+    function calcPurchaseTotal() {
+      const qty = parseFloat(document.getElementById('pchQuantity').value) || 0;
+      const rate = parseFloat(document.getElementById('pchPurchasePrice').value) || 0;
+      const total = qty * rate;
+      document.getElementById('pchTotalAmountDisplay').textContent = '₹' + total.toFixed(2);
+    }
+
+    async function submitSupplierPurchase(event) {
+      event.preventDefault();
+      const token = localStorage.getItem('rms_auth_token');
+      const btn = document.getElementById('btnSavePurchase');
+      btn.disabled = true;
+      btn.textContent = 'Saving Purchase...';
+
+      const data = {
+        productId: document.getElementById('pchProductSelect').value,
+        supplierName: document.getElementById('pchSupplierName').value,
+        supplierMobile: document.getElementById('pchSupplierMobile').value,
+        invoiceNo: document.getElementById('pchInvoiceNo').value,
+        purchaseDate: document.getElementById('pchPurchaseDate').value,
+        quantity: parseInt(document.getElementById('pchQuantity').value, 10),
+        purchasePrice: parseFloat(document.getElementById('pchPurchasePrice').value),
+        paymentStatus: document.getElementById('pchPaymentStatus').value,
+        notes: document.getElementById('pchNotes').value
+      };
+
+      try {
+        const res = await AppStore.addPurchase(token, data);
+        closeNewPurchaseModal();
+        showToast('success', `✅ Inward Purchase of ${data.quantity} pcs from "${data.supplierName}" recorded successfully! Live stock updated.`);
+        await fetchValuationData();
+      } catch (err) {
+        const alertBox = document.getElementById('modalPurchaseAlert');
+        alertBox.className = 'alert alert-danger';
+        alertBox.textContent = err.message;
+        alertBox.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '💾 Save Inward Stock & Update Valuation';
+      }
+    }
+
+    // ================= MODAL 2 CONTROLLER: PURCHASES LEDGER =================
+    function openPurchasesLedgerModal(filterSupplier = '') {
+      document.getElementById('ledgerSearchInput').value = filterSupplier;
+      renderPurchasesLedger();
+      document.getElementById('purchasesLedgerModal').classList.add('show');
+    }
+
+    function closePurchasesLedgerModal() {
+      document.getElementById('purchasesLedgerModal').classList.remove('show');
+    }
+
+    function viewProductPurchases(productId) {
+      const prod = allProducts.find(p => p.id === productId);
+      openPurchasesLedgerModal(prod ? prod.name : '');
+    }
+
+    function renderPurchasesLedger() {
+      const search = (document.getElementById('ledgerSearchInput').value || '').trim().toLowerCase();
+      const tbody = document.getElementById('purchasesLedgerTableBody');
+      tbody.innerHTML = '';
+
+      const filtered = allPurchases.filter(pch => {
+        if (!search) return true;
+        return (pch.supplierName && pch.supplierName.toLowerCase().includes(search)) ||
+          (pch.invoiceNo && pch.invoiceNo.toLowerCase().includes(search)) ||
+          (pch.productName && pch.productName.toLowerCase().includes(search)) ||
+          (pch.notes && pch.notes.toLowerCase().includes(search));
+      });
+
+      document.getElementById('ledgerTotalCount').textContent = filtered.length;
+      const totalSpending = filtered.reduce((acc, p) => acc + (p.totalAmount || 0), 0);
+      document.getElementById('ledgerTotalSpending').textContent = '₹' + totalSpending.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#64748b; padding:20px;">No supplier purchase records found.</td></tr>';
+        return;
+      }
+
+      filtered.forEach(pch => {
+        let statusBadge = '';
+        if (pch.paymentStatus === 'PAID') {
+          statusBadge = '<span class="stock-pill pill-green">PAID</span>';
+        } else if (pch.paymentStatus === 'PENDING') {
+          statusBadge = '<span class="stock-pill pill-red">PENDING</span>';
+        } else {
+          statusBadge = '<span class="stock-pill pill-blue">PARTIAL</span>';
+        }
+
+        tbody.innerHTML += `
+          <tr>
+            <td>
+              <strong>${pch.purchaseDate || '-'}</strong><br>
+              <small style="color: #64748b;">${pch.id}</small>
+            </td>
+            <td>
+              <strong style="color: #1e1b4b;">${pch.supplierName}</strong><br>
+              <small style="color: #64748b;">📞 ${pch.supplierMobile || 'N/A'}</small>
+            </td>
+            <td>
+              <code style="background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 4px; font-weight: 700;">${pch.invoiceNo}</code>
+            </td>
+            <td>
+              <strong>${pch.productName}</strong><br>
+              <small style="color: #64748b;">${pch.notes || ''}</small>
+            </td>
+            <td style="text-align: center; font-weight: 800; color: #15803d;">
+              +${pch.quantity}
+            </td>
+            <td style="text-align: right; font-weight: 600;">
+              ₹${Number(pch.purchasePrice || 0).toFixed(2)}
+            </td>
+            <td style="text-align: right; font-weight: 800; color: #1e1b4b;">
+              ₹${Number(pch.totalAmount || 0).toFixed(2)}
+            </td>
+            <td style="text-align: center;">
+              ${statusBadge}
+            </td>
+            <td style="font-size: 11px; color: #475569;">
+              ${pch.receivedBy || 'admin'}
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    // ================= MODAL 3 CONTROLLER: TIMELINE =================
+    function openProductTimeline(productId) {
+      const prod = allProducts.find(p => p.id === productId);
+      if (!prod) return;
+
+      document.getElementById('timelineProdTitle').textContent = `Stock Movement Journal: ${prod.name}`;
+      const container = document.getElementById('timelineList');
+      container.innerHTML = '';
+
+      const movements = allMovements.filter(m => m.productId === productId);
+      if (movements.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">No movement entries recorded for this item yet.</div>';
+      } else {
+        movements.forEach(m => {
+          let badge = '';
+          if (m.type === 'STOCK_IN') badge = '<span class="stock-pill pill-green">STOCK IN (+)</span>';
+          else if (m.type === 'STOCK_OUT') badge = '<span class="stock-pill pill-red">STOCK OUT (-)</span>';
+          else badge = '<span class="stock-pill pill-blue">' + m.type + '</span>';
+
+          container.innerHTML += `
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                ${badge}
+                <span style="font-size: 11px; color: #64748b;">${new Date(m.timestamp).toLocaleString()}</span>
+              </div>
+              <div style="font-size: 13px; font-weight: 700; color: #0f172a;">
+                Quantity Change: ${m.type === 'STOCK_OUT' ? '-' : '+'}${m.quantity} pcs (Stock: ${m.previousStock || 0} → ${m.newStock || 0})
+              </div>
+              <div style="font-size: 12px; color: #475569; margin-top: 2px;">
+                Reason: <strong>${m.reason || 'Manual Adjustment'}</strong> &bull; Actor: <em>${m.actor || 'admin'}</em>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      document.getElementById('productTimelineModal').classList.add('show');
+    }
+
+    function closeTimelineModal() {
+      document.getElementById('productTimelineModal').classList.remove('show');
+    }
+
+    // Toast helper
+    function showToast(type, msg) {
+      const toast = document.getElementById('toastAlert');
+      toast.className = `alert alert-${type} no-print`;
+      toast.textContent = msg;
+      toast.style.display = 'block';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 5000);
+    }
+
+    // Logout
+    function logout() {
+      SecurityEngine.clearSession();
+      window.location.href = '../admin-login.html';
+    }
+  </script>
+</body>
+</html>

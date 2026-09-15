@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cashier POS Counter - Readymade Clothing Shop</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .pos-main-grid {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 18px;
+      padding: 16px;
+      height: calc(100vh - 65px);
+    }
+    @media (max-width: 900px) {
+      .pos-main-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+    }
+    .inactivity-bar {
+      display: none;
+      background: #f59e0b;
+      color: #78350f;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="inactivityWarning" class="inactivity-bar">
+    ⚠️ Inactivity Notice: You will be automatically logged out in 1 minute. Move your mouse or tap any button to continue billing.
+  </div>
+
+  <div class="main-wrapper" style="min-height: 100vh;">
+    <!-- Top Header -->
+    <header class="top-navbar" style="background: #0f172a; color: white; border-bottom: none;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="font-size: 24px;">💳</div>
+        <div>
+          <div style="font-weight: 700; font-size: 15px; color: #fff;">Readymade POS Counter</div>
+          <div style="font-size: 11px; color: #34d399;">TERMINAL #1 &bull; SHIFT ACTIVE &bull; CASHIER ROLE</div>
+        </div>
+      </div>
+
+      <div class="user-menu">
+        <div style="text-align: right; margin-right: 8px;">
+          <div style="font-size: 13px; font-weight: 600; color: #f8fafc;" id="cashierNameDisplay">Cashier</div>
+          <div style="font-size: 11px; color: #94a3b8;" id="cashierEmpId">ID: CSH001</div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="openShiftSalesModal()" style="background:#1e293b; color:#fff; border-color:#334155;">
+          📊 My Shift
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="logout()">
+          End Shift & Logout 🚪
+        </button>
+      </div>
+    </header>
+
+    <!-- Toast Alert -->
+    <div id="posAlert" class="alert" style="margin: 10px 16px 0 16px;"></div>
+
+    <!-- POS Content Grid -->
+    <div class="pos-main-grid">
+      <!-- Left Column: Search, Category Filter & Products Grid -->
+      <div class="pos-products" style="display: flex; flex-direction: column; overflow: hidden;">
+        <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; margin-bottom: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 240px;">
+            <input type="text" id="barcodeSearch" class="form-control" placeholder="🔍 Scan Barcode (e.g. 8901001) or search garment name / SKU..." autofocus>
+          </div>
+          <select id="categoryFilter" class="form-control" style="width: 160px;">
+            <option value="ALL">All Categories</option>
+            <option value="Shirts">Shirts</option>
+            <option value="T-Shirts">T-Shirts</option>
+            <option value="Jeans">Jeans</option>
+            <option value="Trousers">Trousers</option>
+            <option value="Sarees">Sarees</option>
+            <option value="Kurtis">Kurtis</option>
+            <option value="Kids Wear">Kids Wear</option>
+          </select>
+        </div>
+
+        <div class="product-grid" id="posProductGrid" style="flex: 1; overflow-y: auto; align-content: start;">
+          <!-- Garment Items Injected Here -->
+        </div>
+      </div>
+
+      <!-- Right Column: Cart & Payment Checkout -->
+      <div class="pos-cart" style="display: flex; flex-direction: column; height: 100%;">
+        <div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+          <div>
+            <h3 style="font-size: 15px; font-weight: 700; margin: 0; color: #0f172a;">🧾 Create Customer Bill</h3>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+              Items: <strong id="cartCount">0</strong> | Total Qty: <strong id="cartTotalQty" style="color: #6366f1;">0</strong> pcs
+            </div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="clearCart()" style="font-size: 11px; padding: 3px 8px; color: #ef4444; border-color: #fca5a5;">Clear Bill</button>
+        </div>
+
+        <!-- Customer Info with Masked Mobile Text Box -->
+        <div style="padding: 10px 16px; background: #ffffff; border-bottom: 1px solid var(--border);">
+          <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 8px;">
+            <div>
+              <label for="custMobileInput" style="font-size: 10px; font-weight: 700; color: #475569; display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px;">
+                <span>📱 CUSTOMER MOBILE</span>
+                <span style="color: #4f46e5; font-weight: 700; font-size: 9px; background: #e0e7ff; padding: 1px 5px; border-radius: 3px;">MASKED</span>
+              </label>
+              <div style="position: relative; display: flex; align-items: center;">
+                <span style="position: absolute; left: 8px; font-size: 12px; font-weight: 700; color: #64748b; pointer-events: none;">+91</span>
+                <input type="text" id="custMobileInput" class="form-control" style="font-size: 12px; padding: 6px 8px 6px 36px; font-family: monospace; font-weight: 600; letter-spacing: 1px;" placeholder="XXXXX-XXXXX" maxlength="11" oninput="applyMobileMask(this)">
+              </div>
+            </div>
+            <div>
+              <label for="custNameInput" style="font-size: 10px; font-weight: 700; color: #475569; display: block; margin-bottom: 3px;">
+                👤 CUSTOMER NAME
+              </label>
+              <input type="text" id="custNameInput" class="form-control" style="font-size: 12px; padding: 6px 10px;" placeholder="Walk-in Customer">
+            </div>
+          </div>
+        </div>
+
+        <!-- Cart Items List -->
+        <div class="cart-items" id="cartItemList" style="flex: 1; overflow-y: auto; padding: 12px 16px;">
+          <div style="text-align: center; color: #94a3b8; padding-top: 60px;">
+            <div style="font-size: 36px; margin-bottom: 8px;">🛒</div>
+            <div style="font-weight: 500;">No items in cart</div>
+            <div style="font-size: 12px; margin-top: 4px;">Click an apparel card or scan barcode to add</div>
+          </div>
+        </div>
+
+        <!-- Summary: Subtotal, Discount % + Discount Amount, Tax % + Tax Amount, Total Amount -->
+        <div class="cart-summary" style="padding: 14px 16px; border-top: 1px solid var(--border); background: white;">
+          <!-- Total Quantity -->
+          <div class="summary-line" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; background: #f0fdf4; padding: 4px 8px; border-radius: 4px; border: 1px solid #bbf7d0;">
+            <span style="color: #166534; font-size: 13px; font-weight: 700;">📦 Total Quantity:</span>
+            <span id="summaryTotalQty" style="font-weight: 800; color: #15803d; font-size: 14px;">0 pcs</span>
+          </div>
+
+          <div class="summary-line" style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span style="color: var(--text-muted); font-size: 13px;">Items Subtotal:</span>
+            <span id="summarySubtotal" style="font-weight: 600; color: #0f172a;">₹0.00</span>
+          </div>
+          
+          <!-- Discount % Input -->
+          <div class="summary-line" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="color: var(--text-muted); font-size: 13px;">Discount (%):</span>
+            <div style="display: flex; align-items: center; background: #f8fafc; border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px;">
+              <input type="number" id="discountInput" min="0" max="20" value="0" style="width: 45px; border: none; background: transparent; text-align: right; font-weight: 700; font-size: 13px;" oninput="onDiscountPercentChange()">
+              <span style="font-size: 12px; color: #64748b; margin-left: 3px;">%</span>
+            </div>
+          </div>
+
+          <!-- Dedicated Discount Amount Row -->
+          <div class="summary-line" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; background: #fef2f2; padding: 6px 10px; border-radius: 6px; border: 1px dashed #fca5a5;">
+            <div style="display: flex; align-items: center; gap: 5px;">
+              <span style="font-size: 14px;">🏷️</span>
+              <strong style="color: #991b1b; font-size: 13px;">Discount Amount:</strong>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="display: flex; align-items: center; background: #ffffff; border: 1px solid #fca5a5; border-radius: 4px; padding: 1px 6px;">
+                <span style="font-size: 11px; color: #dc2626; font-weight: 700; margin-right: 2px;">₹</span>
+                <input type="number" id="discountAmountInput" min="0" value="0.00" step="0.5" style="width: 65px; border: none; background: transparent; text-align: right; font-weight: 800; font-size: 13px; color: #dc2626;" oninput="onDiscountAmountChange()">
+              </div>
+              <span id="summaryDiscountAmount" style="font-weight: 800; color: #dc2626; font-size: 14px; min-width: 65px; text-align: right;">- ₹0.00</span>
+            </div>
+          </div>
+
+          <!-- Tax % + Tax Amount -->
+          <div class="summary-line" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="color: var(--text-muted); font-size: 13px;">GST / Tax (<span id="dispTaxPercent">5</span>%):</span>
+            <span id="summaryTax" style="font-weight: 600; color: #475569;">+ ₹0.00</span>
+          </div>
+
+          <!-- Total Amount -->
+          <div class="summary-total" style="margin-top: 8px; padding-top: 10px; border-top: 2px dashed var(--border); display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 700; font-size: 14px; text-transform: uppercase; color: #0f172a;">Total Amount:</span>
+            <span style="color: #059669; font-size: 20px; font-weight: 800;" id="summaryTotal">₹0.00</span>
+          </div>
+
+          <!-- Payment Options -->
+          <div style="margin-top: 10px;">
+            <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">PAYMENT METHOD:</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px;">
+              <button type="button" class="btn btn-outline btn-sm pay-btn active" data-method="CASH" onclick="selectPaymentMethod('CASH', this)">💵 Cash</button>
+              <button type="button" class="btn btn-outline btn-sm pay-btn" data-method="UPI" onclick="selectPaymentMethod('UPI', this)">📱 UPI / QR</button>
+              <button type="button" class="btn btn-outline btn-sm pay-btn" data-method="CARD" onclick="selectPaymentMethod('CARD', this)">💳 Card</button>
+            </div>
+
+            <!-- Cash Tender Calculator -->
+            <div id="cashCalcArea" style="display: flex; gap: 8px; align-items: center; background: #f1f5f9; padding: 8px 10px; border-radius: 6px; margin-bottom: 10px;">
+              <div style="font-size: 11px; color: #475569; font-weight: 600; white-space: nowrap;">Cash Received:</div>
+              <input type="number" id="cashTendered" class="form-control" style="padding: 4px 8px; font-size: 12px;" placeholder="₹ Amount" oninput="calculateChange()">
+              <div style="font-size: 11px; white-space: nowrap;">Change: <strong id="changeReturnVal" style="color: #059669;">₹0.00</strong></div>
+            </div>
+
+            <button id="checkoutBtn" class="btn btn-emerald btn-block" style="padding: 12px; font-size: 14px; font-weight: 700;" onclick="handleCheckout()">
+              Complete Sale & Print Receipt 🧾
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: RECEIPT PREVIEW ================= -->
+  <div class="modal-backdrop" id="receiptModal">
+    <div class="modal-box" style="max-width: 380px;">
+      <div class="modal-header">
+        <h3 style="font-size: 16px;">Sale Receipt Generated</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeReceiptModal()">✕</button>
+      </div>
+      <div class="modal-body" id="receiptContent" style="font-family: monospace; font-size: 12px; background: #fff;">
+        <!-- Injected Printable Receipt -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeReceiptModal()">New Customer</button>
+        <button class="btn btn-emerald" onclick="window.print()">Print Receipt 🖨️</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: SHIFT SALES ================= -->
+  <div class="modal-backdrop" id="shiftModal">
+    <div class="modal-box" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 style="font-size: 16px;">My Shift Sales History</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeShiftModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="shiftSummaryStats" style="display: flex; gap: 12px; margin-bottom: 14px;"></div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Invoice</th>
+                <th>Time</th>
+                <th>Payment</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody id="shiftTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeShiftModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/security.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    // Guard Cashier Route
+    if (!SecurityEngine.guardPage('CASHIER')) {
+      // Guard will redirect if not authenticated
+    }
+
+    const currentCashier = SecurityEngine.getCurrentUser();
+    if (currentCashier) {
+      document.getElementById('cashierNameDisplay').textContent = currentCashier.fullName || currentCashier.username;
+      document.getElementById('cashierEmpId').textContent = 'ID: ' + (currentCashier.employeeId || 'CSH');
+    }
+
+    let cart = [];
+    let selectedPayment = 'CASH';
+    let cachedProducts = [];
+
+    function showPosAlert(msg, type = 'success') {
+      const alertEl = document.getElementById('posAlert');
+      alertEl.className = `alert alert-${type} show`;
+      alertEl.innerHTML = `<span>${type === 'success' ? '✅' : '⚠️'}</span> <div>${msg}</div>`;
+      setTimeout(() => { alertEl.className = 'alert'; }, 3500);
+    }
+
+    async function loadProducts() {
+      const token = localStorage.getItem('rms_auth_token');
+      try {
+        cachedProducts = await AppStore.getProducts(token);
+        renderProductGrid();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function renderProductGrid() {
+      const search = document.getElementById('barcodeSearch').value.toLowerCase().trim();
+      const cat = document.getElementById('categoryFilter').value;
+      const grid = document.getElementById('posProductGrid');
+      grid.innerHTML = '';
+
+      const filtered = cachedProducts.filter(p => {
+        if (!p.isActive) return false;
+        const matchesCat = cat === 'ALL' || p.category === cat;
+        const matchesSearch = !search ||
+          p.name.toLowerCase().includes(search) ||
+          p.sku.toLowerCase().includes(search) ||
+          p.barcode.includes(search);
+        return matchesCat && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #64748b; padding: 40px;">No matching clothing products found.</div>`;
+        return;
+      }
+
+      filtered.forEach(p => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'product-item';
+        itemEl.innerHTML = `
+          <div style="height: 100px; overflow: hidden; margin-bottom: 8px; border-radius: 4px; display: flex; align-items: center; justify-content: center; background: #f8fafc; border: 1px solid var(--border);">
+            <img src="${p.image || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=150'}" alt="${p.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=150'">
+          </div>
+          <div style="font-weight: 700; font-size: 13px; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 34px;" title="${p.name}">${p.name}</div>
+          <div style="margin-bottom: 6px;">
+            <span class="product-tag">${p.size}</span>
+            <span class="product-tag">${p.color}</span>
+          </div>
+          <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">SKU: ${p.sku} | Barcode: ${p.barcode}</div>
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 8px; border-top: 1px dashed var(--border);">
+            <div class="product-price">₹${p.sellingPrice.toFixed(2)}</div>
+            <div style="font-size: 11px; color: ${p.stockQuantity <= 3 ? '#ef4444' : '#64748b'};">
+              Stock: <strong>${p.stockQuantity}</strong>
+            </div>
+          </div>
+        `;
+        itemEl.addEventListener('click', () => addToCart(p));
+        grid.appendChild(itemEl);
+      });
+    }
+
+    function addToCart(product) {
+      if (product.stockQuantity <= 0) {
+        showPosAlert(`"${product.name}" is out of stock!`, 'error');
+        return;
+      }
+
+      const existing = cart.find(i => i.productId === product.id);
+      if (existing) {
+        if (existing.quantity >= product.stockQuantity) {
+          showPosAlert(`Cannot add more. Available stock is ${product.stockQuantity}.`, 'error');
+          return;
+        }
+        existing.quantity += 1;
+      } else {
+        cart.push({ productId: product.id, quantity: 1 });
+      }
+
+      renderCart();
+      updateCartSummary();
+    }
+
+    function changeQuantity(productId, delta) {
+      const item = cart.find(i => i.productId === productId);
+      if (!item) return;
+      const product = cachedProducts.find(p => p.id === productId);
+      if (!product) return;
+
+      const newQty = item.quantity + delta;
+      if (newQty <= 0) {
+        cart = cart.filter(i => i.productId !== productId);
+      } else if (newQty > product.stockQuantity) {
+        showPosAlert(`Cannot exceed available stock of ${product.stockQuantity}.`, 'error');
+        return;
+      } else {
+        item.quantity = newQty;
+      }
+
+      renderCart();
+      updateCartSummary();
+    }
+
+    function removeFromCart(productId) {
+      cart = cart.filter(i => i.productId !== productId);
+      renderCart();
+      updateCartSummary();
+    }
+
+    function clearCart() {
+      cart = [];
+      renderCart();
+      updateCartSummary();
+    }
+
+    function applyMobileMask(input) {
+      const clean = input.value.replace(/\D/g, '').slice(0, 10);
+      if (clean.length > 5) {
+        input.value = clean.slice(0, 5) + '-' + clean.slice(5);
+      } else {
+        input.value = clean;
+      }
+    }
+
+    function renderCart() {
+      const container = document.getElementById('cartItemList');
+      const totalItemsCount = cart.length;
+      const totalUnitsCount = cart.reduce((acc, i) => acc + i.quantity, 0);
+
+      document.getElementById('cartCount').textContent = totalItemsCount;
+      const totalQtyEl = document.getElementById('cartTotalQty');
+      if (totalQtyEl) totalQtyEl.textContent = totalUnitsCount;
+
+      if (cart.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; color: #94a3b8; padding-top: 60px;">
+            <div style="font-size: 36px; margin-bottom: 8px;">🛒</div>
+            <div style="font-weight: 500;">No items in cart</div>
+            <div style="font-size: 12px; margin-top: 4px;">Click an apparel card or scan barcode to add</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = '';
+      cart.forEach(item => {
+        const p = cachedProducts.find(prod => prod.id === item.productId);
+        if (!p) return;
+
+        const mrp = p.mrp || p.sellingPrice;
+        const perItemDiscount = mrp > p.sellingPrice ? (mrp - p.sellingPrice) * item.quantity : 0;
+
+        const row = document.createElement('div');
+        row.className = 'cart-row';
+        row.innerHTML = `
+          <div style="flex: 1;">
+            <div style="font-weight: 700; font-size: 13px; color: #0f172a;">${p.name}</div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">
+              <span class="product-tag">${p.size}</span>
+              <span class="product-tag">${p.color}</span>
+              <span>₹${p.sellingPrice.toFixed(2)} each</span>
+              ${perItemDiscount > 0 ? `<span style="color: #16a34a; font-weight: 600; margin-left: 4px;">(Saved ₹${perItemDiscount.toFixed(2)})</span>` : ''}
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <button class="btn btn-outline btn-sm" style="padding: 2px 8px; font-weight: bold;" onclick="changeQuantity('${p.id}', -1)">-</button>
+            <span style="font-weight: 700; font-size: 13px; min-width: 24px; text-align: center;">${item.quantity}</span>
+            <button class="btn btn-outline btn-sm" style="padding: 2px 8px; font-weight: bold;" onclick="changeQuantity('${p.id}', 1)">+</button>
+          </div>
+          <div style="text-align: right; min-width: 75px; margin-left: 10px;">
+            <div style="font-weight: 700; font-size: 13px; color: #0f172a;">₹${(p.sellingPrice * item.quantity).toFixed(2)}</div>
+            <button onclick="removeFromCart('${p.id}')" style="background:none; border:none; color:#ef4444; font-size:11px; cursor:pointer; padding: 2px 0;">Remove</button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function onDiscountPercentChange() {
+      updateCartSummary();
+    }
+
+    function onDiscountAmountChange() {
+      let subtotal = 0;
+      cart.forEach(item => {
+        const p = cachedProducts.find(prod => prod.id === item.productId);
+        if (p) subtotal += p.sellingPrice * item.quantity;
+      });
+
+      const discAmtInput = document.getElementById('discountAmountInput');
+      const discAmt = Math.max(Number(discAmtInput.value) || 0, 0);
+      const discPercent = subtotal > 0 ? Math.min(20, Math.round((discAmt / subtotal) * 100)) : 0;
+      
+      document.getElementById('discountInput').value = discPercent;
+      updateCartSummary();
+    }
+
+    function updateCartSummary() {
+      let totalQty = 0;
+      let subtotal = 0;
+      let tax = 0;
+
+      cart.forEach(item => {
+        const p = cachedProducts.find(prod => prod.id === item.productId);
+        if (p) {
+          totalQty += item.quantity;
+          const itemSub = p.sellingPrice * item.quantity;
+          subtotal += itemSub;
+          tax += (itemSub * (p.taxRate || 0)) / 100;
+        }
+      });
+
+      const totalQtyEl = document.getElementById('summaryTotalQty');
+      if (totalQtyEl) totalQtyEl.textContent = totalQty + ' pcs';
+
+      const discInput = document.getElementById('discountInput');
+      const discountPercent = Math.min(Math.max(Number(discInput.value) || 0, 0), 20);
+      const discountAmount = (subtotal * discountPercent) / 100;
+      const total = Math.max(0, subtotal - discountAmount + tax);
+
+      const dispDisc = document.getElementById('dispDiscountPercent');
+      if (dispDisc) dispDisc.textContent = discountPercent;
+
+      const dispTax = document.getElementById('dispTaxPercent');
+      if (dispTax) {
+        dispTax.textContent = subtotal > 0 ? ((tax / subtotal) * 100).toFixed(0) : 5;
+      }
+
+      document.getElementById('summarySubtotal').textContent = '₹' + subtotal.toFixed(2);
+      const discAmtEl = document.getElementById('summaryDiscountAmount');
+      if (discAmtEl) discAmtEl.textContent = '- ₹' + discountAmount.toFixed(2);
+
+      const discAmtInput = document.getElementById('discountAmountInput');
+      if (discAmtInput && document.activeElement !== discAmtInput) {
+        discAmtInput.value = discountAmount.toFixed(2);
+      }
+
+      document.getElementById('summaryTax').textContent = '+ ₹' + tax.toFixed(2);
+      document.getElementById('summaryTotal').textContent = '₹' + total.toFixed(2);
+
+      calculateChange();
+    }
+
+    function selectPaymentMethod(method, btn) {
+      selectedPayment = method;
+      document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('cashCalcArea').style.display = method === 'CASH' ? 'flex' : 'none';
+    }
+
+    function calculateChange() {
+      const totalText = document.getElementById('summaryTotal').textContent.replace('₹', '');
+      const total = parseFloat(totalText) || 0;
+      const tendered = parseFloat(document.getElementById('cashTendered').value) || 0;
+      const change = Math.max(0, tendered - total);
+      document.getElementById('changeReturnVal').textContent = '₹' + change.toFixed(2);
+    }
+
+    async function handleCheckout() {
+      if (cart.length === 0) {
+        showPosAlert('Please add garments to cart before completing sale.', 'error');
+        return;
+      }
+
+      const token = localStorage.getItem('rms_auth_token');
+      const discountPercent = Number(document.getElementById('discountInput').value) || 0;
+      const customerName = document.getElementById('custNameInput').value;
+      const customerMobile = document.getElementById('custMobileInput').value;
+
+      try {
+        const sale = await AppStore.createSale(token, cart, discountPercent, selectedPayment, customerName, customerMobile);
+        renderReceipt(sale);
+
+        // Reset cart and reload stock
+        cart = [];
+        document.getElementById('discountInput').value = 0;
+        document.getElementById('custNameInput').value = '';
+        document.getElementById('custMobileInput').value = '';
+        document.getElementById('cashTendered').value = '';
+        renderCart();
+        updateCartSummary();
+        await loadProducts();
+      } catch (err) {
+        showPosAlert(err.message, 'error');
+      }
+    }
+
+    function renderReceipt(sale) {
+      const modal = document.getElementById('receiptModal');
+      const content = document.getElementById('receiptContent');
+
+      let itemsHtml = '';
+      sale.items.forEach(i => {
+        itemsHtml += `
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span>${i.productName} (${i.size}) x${i.quantity}</span>
+            <span>₹${i.subtotal.toFixed(2)}</span>
+          </div>
+        `;
+      });
+
+      content.innerHTML = `
+        <div id="printableReceipt" style="text-align:center; padding: 8px;">
+          <h2 style="font-size: 16px; margin-bottom: 2px;">👔 READYMADE GARMENT SHOP</h2>
+          <p style="font-size: 11px; color:#475569;">123 Fashion Street, Retail Plaza<br>GSTIN: 27AABCR1234F1Z5 | Ph: +91 9876543210</p>
+          <hr style="border:none; border-top: 1px dashed #000; margin: 8px 0;">
+          
+          <div style="text-align:left; font-size:11px; margin-bottom: 8px;">
+            <div><strong>Invoice No:</strong> ${sale.invoiceNo}</div>
+            <div><strong>Date:</strong> ${new Date(sale.createdAt).toLocaleString()}</div>
+            <div><strong>Cashier:</strong> ${sale.cashierName}</div>
+            <div><strong>Customer:</strong> ${sale.customerName || 'Walk-in'}</div>
+            ${sale.customerMobile ? `<div><strong>Mobile (Masked):</strong> +91 ${sale.customerMobile}</div>` : ''}
+            <div><strong>Payment:</strong> ${sale.paymentMethod} (PAID)</div>
+          </div>
+          
+          <hr style="border:none; border-top: 1px dashed #000; margin: 8px 0;">
+          
+          <div style="text-align:left; font-size:11px;">
+            <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:4px; border-bottom: 1px solid #ddd; padding-bottom: 2px;">
+              <span>ITEMS & QTY</span>
+              <span>AMOUNT</span>
+            </div>
+            ${itemsHtml}
+          </div>
+          
+          <hr style="border:none; border-top: 1px dashed #000; margin: 8px 0;">
+          
+          <div style="text-align:left; font-size:11px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom: 3px; font-weight:600; color:#166534; background:#f0fdf4; padding:2px 4px; border-radius:3px;">
+              <span>Total Quantity:</span>
+              <span>${sale.items.reduce((acc, i) => acc + i.quantity, 0)} pcs (${sale.items.length} items)</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom: 3px;"><span>Items Subtotal:</span><span>₹${sale.subtotal.toFixed(2)}</span></div>
+            <div style="display:flex; justify-content:space-between; color:#ef4444; margin-bottom: 3px;">
+              <span>Discount (${sale.discountPercent}%):</span>
+              <span>-₹${sale.discountAmount.toFixed(2)}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; color:#475569; margin-bottom: 3px;">
+              <span>GST / Tax (5%):</span>
+              <span>+₹${sale.taxAmount.toFixed(2)}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:15px; margin-top:6px; border-top: 1px dashed #000; padding-top: 4px;">
+              <span>TOTAL AMOUNT:</span>
+              <span style="color: #059669;">₹${sale.totalAmount.toFixed(2)}</span>
+            </div>
+          </div>
+          
+          <hr style="border:none; border-top: 1px dashed #000; margin: 8px 0;">
+          <p style="font-size: 10px; margin-top: 6px;">Thank you for shopping with us!<br>Exchanges accepted within 7 days with this bill.</p>
+        </div>
+      `;
+
+      modal.classList.add('show');
+    }
+
+    function closeReceiptModal() {
+      document.getElementById('receiptModal').classList.remove('show');
+    }
+
+    async function openShiftSalesModal() {
+      const token = localStorage.getItem('rms_auth_token');
+      const sales = await AppStore.getMySales(token);
+      const tbody = document.getElementById('shiftTableBody');
+      tbody.innerHTML = '';
+
+      const totalRevenue = sales.reduce((acc, s) => acc + s.totalAmount, 0);
+      document.getElementById('shiftSummaryStats').innerHTML = `
+        <div style="flex:1; background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
+          <div style="font-size:11px; color:#64748b;">Total Bills</div>
+          <div style="font-size:18px; font-weight:bold;">${sales.length}</div>
+        </div>
+        <div style="flex:1; background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
+          <div style="font-size:11px; color:#64748b;">Shift Total Collection</div>
+          <div style="font-size:18px; font-weight:bold; color:#059669;">₹${totalRevenue.toFixed(2)}</div>
+        </div>
+      `;
+
+      if (sales.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#64748b; padding:16px;">No bills generated during this shift yet.</td></tr>`;
+      } else {
+        sales.forEach(s => {
+          tbody.innerHTML += `
+            <tr>
+              <td><strong>${s.invoiceNo}</strong></td>
+              <td>${new Date(s.createdAt).toLocaleTimeString()}</td>
+              <td><span class="product-tag">${s.paymentMethod}</span></td>
+              <td><strong>₹${s.totalAmount.toFixed(2)}</strong></td>
+            </tr>
+          `;
+        });
+      }
+
+      document.getElementById('shiftModal').classList.add('show');
+    }
+
+    function closeShiftModal() {
+      document.getElementById('shiftModal').classList.remove('show');
+    }
+
+    document.getElementById('barcodeSearch').addEventListener('input', renderProductGrid);
+    document.getElementById('categoryFilter').addEventListener('change', renderProductGrid);
+
+    // Auto-add on enter if exact barcode scanned
+    document.getElementById('barcodeSearch').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const val = e.target.value.trim();
+        const product = cachedProducts.find(p => p.barcode === val || p.sku.toLowerCase() === val.toLowerCase());
+        if (product) {
+          addToCart(product);
+          e.target.value = '';
+          renderProductGrid();
+        }
+      }
+    });
+
+    async function loadCategories() {
+      const token = localStorage.getItem('rms_auth_token');
+      try {
+        const cats = await AppStore.getCategories(token);
+        const sel = document.getElementById('categoryFilter');
+        if (sel) {
+          sel.innerHTML = '<option value="ALL">All Categories</option>' +
+            cats.map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+      } catch (err) {
+        console.error('Failed to load categories', err);
+      }
+    }
+
+    function logout() {
+      SecurityEngine.clearSession();
+      window.location.href = '/cashier-login.html';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCategories();
+      loadProducts();
+    });
+  </script>
+</body>
+</html>

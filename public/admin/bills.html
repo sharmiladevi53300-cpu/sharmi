@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bill Management & Sales Reports - Admin Panel</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .reports-container {
+      max-width: 1300px;
+      margin: 20px auto;
+      padding: 0 16px;
+    }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .kpi-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .kpi-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      border-color: #818cf8;
+    }
+    .kpi-card.highlight-today {
+      border-left: 4px solid #10b981;
+    }
+    .kpi-card.highlight-yesterday {
+      border-left: 4px solid #3b82f6;
+    }
+    .kpi-card.highlight-total {
+      border-left: 4px solid #6366f1;
+    }
+    .kpi-card.highlight-payments {
+      border-left: 4px solid #f59e0b;
+    }
+    .kpi-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .kpi-value {
+      font-size: 24px;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.2;
+    }
+    .kpi-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .kpi-click-hint {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #4f46e5;
+      background: #eef2ff;
+      padding: 4px 10px;
+      border-radius: 12px;
+      width: fit-content;
+      transition: all 0.15s;
+    }
+    .kpi-card:hover .kpi-click-hint {
+      background: #4f46e5;
+      color: #ffffff;
+    }
+
+    .filter-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .filter-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .pill-btn {
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: #334155;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .pill-btn:hover {
+      background: #e2e8f0;
+    }
+    .pill-btn.active {
+      background: #4f46e5;
+      color: white;
+      border-color: #4f46e5;
+    }
+    .filter-inputs-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-end;
+    }
+    .badge-payment {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-cash { background: #dcfce7; color: #166534; }
+    .badge-upi { background: #e0e7ff; color: #3730a3; }
+    .badge-card { background: #fef3c7; color: #92400e; }
+
+    /* Modal Styling */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-backdrop.show {
+      display: flex;
+    }
+    .modal-box {
+      background: white;
+      border-radius: var(--radius-md);
+      width: 100%;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      animation: modalSlide 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes modalSlide {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Report Sheet Print & Screen Styling */
+    .report-sheet-container {
+      background: #ffffff;
+      color: #0f172a;
+      font-family: inherit;
+      line-height: 1.5;
+    }
+    .report-header-box {
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 14px;
+      margin-bottom: 16px;
+    }
+    .report-summary-boxes {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .rep-sum-card {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .rep-sum-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #64748b;
+      margin-bottom: 4px;
+    }
+    .rep-sum-val {
+      font-size: 20px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-bottom: 20px;
+    }
+    .report-table th {
+      background: #f1f5f9;
+      color: #334155;
+      font-weight: 700;
+      text-align: left;
+      padding: 8px 10px;
+      border: 1px solid #cbd5e1;
+    }
+    .report-table td {
+      padding: 8px 10px;
+      border: 1px solid #e2e8f0;
+      color: #1e293b;
+    }
+    .report-table tr:nth-child(even) {
+      background: #fafafa;
+    }
+    .report-table tfoot td {
+      background: #f8fafc;
+      font-weight: 800;
+      border-top: 2px solid #334155;
+    }
+
+    /* Print Specific Rules */
+    @media print {
+      body * {
+        visibility: hidden !important;
+      }
+      
+      /* When Thermal Receipt Modal is open */
+      #receiptModal.show, #receiptModal.show * {
+        visibility: visible !important;
+      }
+      #receiptModal.show {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        display: block !important;
+        background: white !important;
+        z-index: 9999 !important;
+      }
+      #receiptModal .modal-box {
+        box-shadow: none !important;
+        border: none !important;
+        max-width: 100% !important;
+        width: 80mm !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+      }
+      #receiptModal .modal-header,
+      #receiptModal .modal-footer {
+        display: none !important;
+      }
+
+      /* When Full Sales Report Modal is open */
+      #salesReportModal.show, #salesReportModal.show * {
+        visibility: visible !important;
+      }
+      #salesReportModal.show {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        display: block !important;
+        background: white !important;
+        z-index: 9999 !important;
+      }
+      #salesReportModal .modal-box {
+        box-shadow: none !important;
+        border: none !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      #salesReportModal .modal-header,
+      #salesReportModal .modal-footer {
+        display: none !important;
+      }
+      #salesReportModal .modal-body {
+        max-height: none !important;
+        overflow: visible !important;
+        padding: 0 !important;
+      }
+
+      @page {
+        margin: 10mm 12mm;
+        size: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-wrapper" style="min-height: 100vh;">
+    <!-- Top Header -->
+    <header class="top-navbar" style="background: #1e1b4b; color: white; border-bottom: none;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="font-size: 24px;">🧾</div>
+        <div>
+          <div style="font-weight: 700; font-size: 15px; color: #fff;">Bill Management & Sales Reports</div>
+          <div style="font-size: 11px; color: #a5b4fc;">INVOICES &bull; DAILY REVENUE &bull; TRANSACTION AUDIT</div>
+        </div>
+      </div>
+
+      <div class="user-menu">
+        <button class="btn btn-outline btn-sm" onclick="window.location.href='index.html'" style="background:#312e81; color:#fff; border-color:#4338ca;">
+          🔙 POS Terminal
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="window.location.href='products.html'" style="background:#0369a1; color:#fff; border-color:#0284c7;">
+          👚 Product Registration
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="window.location.href='barcode-labels.html'" style="background:#4f46e5; color:#fff; border-color:#818cf8;">
+          🏷️ Barcode Labels
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="window.location.href='stock-report.html'" style="background:#0891b2; color:#fff; border-color:#06b6d4; font-weight:700;">
+          📈 Stock Valuation & Inward
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="window.location.href='damaged-returns.html'" style="background:#be123c; color:#fff; border-color:#e11d48; font-weight:700;">
+          🚨 Damage & Returns
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="logout()">
+          Sign Out 🚪
+        </button>
+      </div>
+    </header>
+
+    <div class="reports-container">
+      
+      <!-- Interactive KPI Cards Summary -->
+      <div class="kpi-grid">
+        <!-- Total Overall Revenue Card -->
+        <div class="kpi-card highlight-total" onclick="openSalesReportModal('TOTAL')" title="Click to view & print Consolidated Sales Report">
+          <div>
+            <div class="kpi-label">💰 Total Billing Amount (All Time)</div>
+            <div class="kpi-value" id="kpiTotalRevenue">₹0.00</div>
+            <div class="kpi-sub" id="kpiTotalBillsCount">Total 0 bills processed</div>
+          </div>
+          <div class="kpi-click-hint">📄 View & Print Total Report 🖨️</div>
+        </div>
+
+        <!-- Today's Billing Card -->
+        <div class="kpi-card highlight-today" onclick="openSalesReportModal('TODAY')" title="Click to view & print Today's Sales Report">
+          <div>
+            <div class="kpi-label">📅 Today's Billing (இன்றைய பில்கள்)</div>
+            <div class="kpi-value" style="color: #059669;" id="kpiTodayRevenue">₹0.00</div>
+            <div class="kpi-sub" id="kpiTodayBillsCount">0 bills today</div>
+          </div>
+          <div class="kpi-click-hint" style="color:#059669; background:#ecfdf5;">📄 View & Print Today's Report 🖨️</div>
+        </div>
+
+        <!-- Yesterday's Billing Card -->
+        <div class="kpi-card highlight-yesterday" onclick="openSalesReportModal('YESTERDAY')" title="Click to view & print Yesterday's Sales Report">
+          <div>
+            <div class="kpi-label">⏪ Yesterday's Billing (நேற்றைய பில்கள்)</div>
+            <div class="kpi-value" style="color: #2563eb;" id="kpiYesterdayRevenue">₹0.00</div>
+            <div class="kpi-sub" id="kpiYesterdayBillsCount">0 bills yesterday</div>
+          </div>
+          <div class="kpi-click-hint" style="color:#2563eb; background:#eff6ff;">📄 View & Print Yesterday's Report 🖨️</div>
+        </div>
+
+        <!-- Payment Breakdown Card -->
+        <div class="kpi-card highlight-payments" onclick="openSalesReportModal('PAYMENTS')" title="Click to view & print Payment Breakdown Report">
+          <div>
+            <div class="kpi-label">💳 Payment Breakdown</div>
+            <div style="font-size: 13px; font-weight: 700; display: flex; flex-direction: column; gap: 3px; margin-top: 4px;">
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: #166534;">💵 Cash:</span>
+                <span id="kpiCashTotal">₹0.00</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: #3730a3;">📱 UPI:</span>
+                <span id="kpiUpiTotal">₹0.00</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: #92400e;">💳 Card:</span>
+                <span id="kpiCardTotal">₹0.00</span>
+              </div>
+            </div>
+          </div>
+          <div class="kpi-click-hint" style="color:#d97706; background:#fffbeb;">📄 View Payment Report 🖨️</div>
+        </div>
+      </div>
+
+      <!-- Filter Controls Toolbar -->
+      <div class="filter-card">
+        <!-- Quick Filter Pills -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div class="filter-pills">
+            <button type="button" class="pill-btn active" id="pillAll" onclick="setQuickFilter('ALL')">🌟 All Bills</button>
+            <button type="button" class="pill-btn" id="pillToday" onclick="setQuickFilter('TODAY')">📅 Today's Bills</button>
+            <button type="button" class="pill-btn" id="pillYesterday" onclick="setQuickFilter('YESTERDAY')">⏪ Yesterday's Bills</button>
+            <button type="button" class="pill-btn" id="pillWeek" onclick="setQuickFilter('WEEK')">🗓️ This Week</button>
+            <button type="button" class="pill-btn" id="pillMonth" onclick="setQuickFilter('MONTH')">🗓️ This Month</button>
+          </div>
+
+          <div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="openSalesReportModal('FILTERED')" style="display: flex; align-items: center; gap: 6px; font-weight: 700; color: #4338ca; border-color: #a5b4fc; background: #eef2ff;">
+              <span>🖨️</span> Open & Print Sales Statement
+            </button>
+          </div>
+        </div>
+
+        <!-- Inputs Row -->
+        <div class="filter-inputs-row">
+          <div style="flex: 1; min-width: 200px;">
+            <label style="font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 4px; display: block;">🔍 Search Invoice / Customer / Phone</label>
+            <input type="text" id="searchInput" class="form-control" placeholder="e.g. INV-100201 or Amit or 98765..." oninput="renderBillsTable()">
+          </div>
+
+          <div style="width: 140px;">
+            <label style="font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 4px; display: block;">From Date</label>
+            <input type="date" id="dateFrom" class="form-control" onchange="onCustomDateChange()">
+          </div>
+
+          <div style="width: 140px;">
+            <label style="font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 4px; display: block;">To Date</label>
+            <input type="date" id="dateTo" class="form-control" onchange="onCustomDateChange()">
+          </div>
+
+          <div style="width: 140px;">
+            <label style="font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 4px; display: block;">Payment Mode</label>
+            <select id="filterPayment" class="form-control" onchange="renderBillsTable()">
+              <option value="ALL">All Payments</option>
+              <option value="CASH">CASH</option>
+              <option value="UPI">UPI</option>
+              <option value="CARD">CARD</option>
+            </select>
+          </div>
+
+          <div style="width: 140px;">
+            <label style="font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 4px; display: block;">Cashier</label>
+            <select id="filterCashier" class="form-control" onchange="renderBillsTable()">
+              <option value="ALL">All Cashiers</option>
+            </select>
+          </div>
+
+          <button type="button" class="btn btn-outline btn-sm" onclick="resetFilters()" style="height: 38px; padding: 0 12px;">
+            Reset ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Filtered Results Summary Bar -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 4px;">
+        <div style="font-size: 13px; font-weight: 700; color: #334155;" id="tableSummaryLabel">
+          Showing all bills
+        </div>
+        <div style="font-size: 13px; font-weight: 700; color: #0f172a;">
+          Filtered Total: <span id="filteredTotalAmount" style="color: #059669; font-size: 16px;">₹0.00</span>
+        </div>
+      </div>
+
+      <!-- Detailed Bills Table -->
+      <div class="card" style="padding: 0; overflow: hidden; background: white; border: 1px solid var(--border); border-radius: var(--radius-md);">
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr style="background: #f8fafc;">
+                <th>Invoice No</th>
+                <th>Date & Time</th>
+                <th>Billed By</th>
+                <th>Customer</th>
+                <th>Items Summary</th>
+                <th style="text-align: center;">Payment</th>
+                <th style="text-align: right;">Subtotal</th>
+                <th style="text-align: right;">Tax</th>
+                <th style="text-align: right;">Total Amount</th>
+                <th style="text-align: center;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="billsTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FULL SALES & BILLING REPORT MODAL (A4 PRINTABLE) -->
+  <div class="modal-backdrop" id="salesReportModal">
+    <div class="modal-box" style="max-width: 950px; padding: 0; overflow: hidden; border-radius: 12px; max-height: 92vh; display: flex; flex-direction: column;">
+      <div class="modal-header" style="background: #1e1b4b; color: white; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 20px;">📊</span>
+          <h3 style="font-size: 16px; margin: 0; font-weight: 700;" id="salesReportModalTitle">Sales & Billing Audit Report</h3>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button class="btn btn-purple btn-sm" onclick="printSalesReport()" style="background:#4f46e5; color: white; border: none; font-weight: 700; padding: 6px 14px; border-radius: 6px;">
+            🖨️ Print Report (A4)
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="closeSalesReportModal()" style="color: white; border-color: rgba(255,255,255,0.3); background: transparent;">✕</button>
+        </div>
+      </div>
+
+      <div class="modal-body" style="padding: 24px; overflow-y: auto; flex: 1; background: #f8fafc;">
+        <div id="salesReportContent" class="report-sheet-container" style="background: white; border: 1px solid #e2e8f0; padding: 24px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+          <!-- Dynamically Injected Report -->
+        </div>
+      </div>
+
+      <div class="modal-footer" style="padding: 12px 20px; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 12px; color: #64748b;">
+          💡 Tip: Click <strong>Print Report</strong> to save as PDF or print on standard A4 paper.
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button type="button" class="btn btn-outline" onclick="closeSalesReportModal()">Close</button>
+          <button type="button" class="btn btn-purple" onclick="printSalesReport()" style="font-weight: 700;">
+            🖨️ Print Full Report
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INDIVIDUAL THERMAL RECEIPT MODAL -->
+  <div class="modal-backdrop" id="receiptModal">
+    <div class="modal-box" style="max-width: 440px; padding: 0; overflow: hidden; border-radius: 12px;">
+      <div class="modal-header" style="background: #1e1b4b; color: white; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="font-size: 16px; margin: 0; font-weight: 700;">🧾 Bill Receipt</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeReceiptModal()" style="color: white; border-color: rgba(255,255,255,0.3); background: transparent;">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding: 16px; max-height: calc(85vh - 120px); overflow-y: auto;">
+        <div id="receiptContent" style="background: #fff; border: 1px dashed #94a3b8; padding: 16px; border-radius: 6px; font-family: monospace;">
+          <!-- Injected dynamically -->
+        </div>
+      </div>
+
+      <div class="modal-footer" style="padding: 12px 18px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between;">
+        <button type="button" class="btn btn-outline" onclick="closeReceiptModal()">Close</button>
+        <button type="button" class="btn btn-purple" onclick="window.print()" style="font-weight: 700;">
+          🖨️ Print Receipt
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/security.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    // Security check
+    SecurityEngine.guardPage('ADMIN');
+
+    let allSales = [];
+    let currentFilter = 'ALL';
+
+    async function loadBillData() {
+      const token = localStorage.getItem('rms_auth_token');
+      try {
+        allSales = await AppStore.getSales(token);
+        
+        // Populate cashier dropdown
+        const cashiers = Array.from(new Set(allSales.map(s => s.cashierName || s.cashierId).filter(Boolean)));
+        const cshSelect = document.getElementById('filterCashier');
+        cshSelect.innerHTML = '<option value="ALL">All Cashiers</option>';
+        cashiers.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c;
+          opt.textContent = c;
+          cshSelect.appendChild(opt);
+        });
+
+        calculateKPISummary();
+        renderBillsTable();
+      } catch (err) {
+        console.error('Failed to load sales data', err);
+      }
+    }
+
+    function calculateKPISummary() {
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+      
+      const yestDate = new Date();
+      yestDate.setDate(yestDate.getDate() - 1);
+      const yesterdayStr = yestDate.toISOString().split('T')[0];
+
+      let totalRev = 0;
+      let todayRev = 0;
+      let todayCount = 0;
+      let yesterdayRev = 0;
+      let yesterdayCount = 0;
+
+      let cashTotal = 0;
+      let upiTotal = 0;
+      let cardTotal = 0;
+
+      allSales.forEach(s => {
+        const amt = Number(s.totalAmount || 0);
+        totalRev += amt;
+
+        const saleDateStr = (s.createdAt || '').split('T')[0];
+        if (saleDateStr === todayStr) {
+          todayRev += amt;
+          todayCount++;
+        } else if (saleDateStr === yesterdayStr) {
+          yesterdayRev += amt;
+          yesterdayCount++;
+        }
+
+        const pm = (s.paymentMethod || 'CASH').toUpperCase();
+        if (pm === 'CASH') cashTotal += amt;
+        else if (pm === 'UPI') upiTotal += amt;
+        else if (pm === 'CARD') cardTotal += amt;
+      });
+
+      document.getElementById('kpiTotalRevenue').textContent = '₹' + totalRev.toFixed(2);
+      document.getElementById('kpiTotalBillsCount').textContent = `Total ${allSales.length} bills processed`;
+
+      document.getElementById('kpiTodayRevenue').textContent = '₹' + todayRev.toFixed(2);
+      document.getElementById('kpiTodayBillsCount').textContent = `${todayCount} bills today`;
+
+      document.getElementById('kpiYesterdayRevenue').textContent = '₹' + yesterdayRev.toFixed(2);
+      document.getElementById('kpiYesterdayBillsCount').textContent = `${yesterdayCount} bills yesterday`;
+
+      document.getElementById('kpiCashTotal').textContent = '₹' + cashTotal.toFixed(2);
+      document.getElementById('kpiUpiTotal').textContent = '₹' + upiTotal.toFixed(2);
+      document.getElementById('kpiCardTotal').textContent = '₹' + cardTotal.toFixed(2);
+    }
+
+    function setQuickFilter(mode) {
+      currentFilter = mode;
+      
+      // Update pills active UI
+      document.querySelectorAll('.pill-btn').forEach(btn => btn.classList.remove('active'));
+      if (mode === 'ALL') document.getElementById('pillAll').classList.add('active');
+      else if (mode === 'TODAY') document.getElementById('pillToday').classList.add('active');
+      else if (mode === 'YESTERDAY') document.getElementById('pillYesterday').classList.add('active');
+      else if (mode === 'WEEK') document.getElementById('pillWeek').classList.add('active');
+      else if (mode === 'MONTH') document.getElementById('pillMonth').classList.add('active');
+
+      // Clear custom dates if using quick pill
+      document.getElementById('dateFrom').value = '';
+      document.getElementById('dateTo').value = '';
+
+      renderBillsTable();
+    }
+
+    function onCustomDateChange() {
+      // Deactivate quick pills if custom date picked
+      currentFilter = 'CUSTOM';
+      document.querySelectorAll('.pill-btn').forEach(btn => btn.classList.remove('active'));
+      renderBillsTable();
+    }
+
+    function resetFilters() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('dateFrom').value = '';
+      document.getElementById('dateTo').value = '';
+      document.getElementById('filterPayment').value = 'ALL';
+      document.getElementById('filterCashier').value = 'ALL';
+      setQuickFilter('ALL');
+    }
+
+    function getFilteredSales() {
+      const search = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      const payment = document.getElementById('filterPayment').value;
+      const cashier = document.getElementById('filterCashier').value;
+      const fromDate = document.getElementById('dateFrom').value;
+      const toDate = document.getElementById('dateTo').value;
+
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+
+      const yestDate = new Date();
+      yestDate.setDate(yestDate.getDate() - 1);
+      const yesterdayStr = yestDate.toISOString().split('T')[0];
+
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+
+      const monthAgo = new Date();
+      monthAgo.setDate(monthAgo.getDate() - 30);
+
+      return allSales.filter(s => {
+        const saleDateStr = (s.createdAt || '').split('T')[0];
+        const saleDateObj = new Date(s.createdAt || Date.now());
+
+        // Quick Filter
+        if (currentFilter === 'TODAY' && saleDateStr !== todayStr) return false;
+        if (currentFilter === 'YESTERDAY' && saleDateStr !== yesterdayStr) return false;
+        if (currentFilter === 'WEEK' && saleDateObj < weekAgo) return false;
+        if (currentFilter === 'MONTH' && saleDateObj < monthAgo) return false;
+
+        // Custom Date Range
+        if (fromDate && saleDateStr < fromDate) return false;
+        if (toDate && saleDateStr > toDate) return false;
+
+        // Payment Mode
+        if (payment !== 'ALL' && (s.paymentMethod || '').toUpperCase() !== payment) return false;
+
+        // Cashier
+        if (cashier !== 'ALL' && (s.cashierName || s.cashierId) !== cashier) return false;
+
+        // Search match
+        if (search) {
+          const invMatch = (s.invoiceNo || '').toLowerCase().includes(search);
+          const custNameMatch = (s.customerName || '').toLowerCase().includes(search);
+          const custMobileMatch = (s.customerMobile || '').includes(search);
+          const itemsMatch = (s.items || []).some(i => (i.productName || '').toLowerCase().includes(search));
+          if (!invMatch && !custNameMatch && !custMobileMatch && !itemsMatch) return false;
+        }
+
+        return true;
+      });
+    }
+
+    function renderBillsTable() {
+      const filtered = getFilteredSales();
+      const tbody = document.getElementById('billsTableBody');
+      tbody.innerHTML = '';
+
+      let totalFilteredAmount = 0;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="10" style="text-align: center; color: #64748b; padding: 40px;">
+              <div style="font-size: 28px; margin-bottom: 6px;">🔍</div>
+              <div>No matching bills found for the selected filter criteria.</div>
+            </td>
+          </tr>
+        `;
+        document.getElementById('filteredTotalAmount').textContent = '₹0.00';
+        document.getElementById('tableSummaryLabel').textContent = 'Showing 0 bills';
+        return;
+      }
+
+      filtered.forEach(s => {
+        const total = Number(s.totalAmount || 0);
+        totalFilteredAmount += total;
+
+        const dateObj = new Date(s.createdAt || Date.now());
+        const formattedDate = dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + 
+                              dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+        const pm = (s.paymentMethod || 'CASH').toUpperCase();
+        let badgeClass = 'badge-cash';
+        if (pm === 'UPI') badgeClass = 'badge-upi';
+        else if (pm === 'CARD') badgeClass = 'badge-card';
+
+        const items = s.items || [];
+        const itemsCount = items.reduce((acc, i) => acc + (i.quantity || 1), 0);
+        const itemNames = items.map(i => `${i.productName || 'Garment'} (${i.quantity || 1})`).join(', ');
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong style="color: #4338ca;">${s.invoiceNo || 'INV-000000'}</strong></td>
+          <td style="font-size: 12px; color: #475569; white-space: nowrap;">${formattedDate}</td>
+          <td><span style="font-size: 12px; font-weight: 600;">${s.cashierName || 'Cashier'}</span></td>
+          <td>
+            <div style="font-size: 12px; font-weight: 700; color: #0f172a;">${s.customerName || 'Walk-in Customer'}</div>
+            <div style="font-size: 11px; color: #64748b;">${s.customerMobile || '-'}</div>
+          </td>
+          <td>
+            <div style="font-size: 12px; font-weight: 600;">${itemsCount} Item${itemsCount > 1 ? 's' : ''}</div>
+            <div style="font-size: 11px; color: #64748b; max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${itemNames}">${itemNames}</div>
+          </td>
+          <td style="text-align: center;"><span class="badge-payment ${badgeClass}">${pm}</span></td>
+          <td style="text-align: right; font-size: 12px;">₹${(s.subtotal || 0).toFixed(2)}</td>
+          <td style="text-align: right; font-size: 12px; color: #64748b;">₹${(s.taxAmount || 0).toFixed(2)}</td>
+          <td style="text-align: right;"><strong style="font-size: 13px; color: #0f172a;">₹${total.toFixed(2)}</strong></td>
+          <td style="text-align: center; white-space: nowrap;">
+            <button class="btn btn-outline btn-sm" onclick="viewReceipt('${s.id}')" style="padding: 3px 8px; font-size: 11px; font-weight: 600; color: #4338ca; border-color: #c7d2fe; background: white;" title="View Bill Receipt">
+              🧾 Receipt
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('filteredTotalAmount').textContent = '₹' + totalFilteredAmount.toFixed(2);
+      
+      let summaryText = `Showing ${filtered.length} bill${filtered.length > 1 ? 's' : ''}`;
+      if (currentFilter === 'TODAY') summaryText = `Showing Today's ${filtered.length} bills`;
+      else if (currentFilter === 'YESTERDAY') summaryText = `Showing Yesterday's ${filtered.length} bills`;
+      else if (currentFilter === 'WEEK') summaryText = `Showing This Week's ${filtered.length} bills`;
+      else if (currentFilter === 'MONTH') summaryText = `Showing This Month's ${filtered.length} bills`;
+      document.getElementById('tableSummaryLabel').textContent = summaryText;
+    }
+
+    // ----------------------------------------------------
+    // SALES REPORT MODAL GENERATION & PRINT
+    // ----------------------------------------------------
+    function openSalesReportModal(reportType) {
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+      
+      const yestDate = new Date();
+      yestDate.setDate(yestDate.getDate() - 1);
+      const yesterdayStr = yestDate.toISOString().split('T')[0];
+
+      let targetSales = [];
+      let reportTitle = '';
+      let periodLabel = '';
+
+      if (reportType === 'TODAY') {
+        targetSales = allSales.filter(s => (s.createdAt || '').split('T')[0] === todayStr);
+        reportTitle = "TODAY'S SALES & BILLING REPORT (இன்றைய விற்பனை அறிக்கை)";
+        periodLabel = `Today: ${now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`;
+        setQuickFilter('TODAY');
+      } else if (reportType === 'YESTERDAY') {
+        targetSales = allSales.filter(s => (s.createdAt || '').split('T')[0] === yesterdayStr);
+        reportTitle = "YESTERDAY'S SALES & BILLING REPORT (நேற்றைய விற்பனை அறிக்கை)";
+        periodLabel = `Yesterday: ${yestDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`;
+        setQuickFilter('YESTERDAY');
+      } else if (reportType === 'TOTAL') {
+        targetSales = [...allSales];
+        reportTitle = "CONSOLIDATED ALL-TIME SALES & REVENUE REPORT (முழு விற்பனை அறிக்கை)";
+        periodLabel = "All Time Historical Invoices";
+        setQuickFilter('ALL');
+      } else if (reportType === 'PAYMENTS') {
+        targetSales = [...allSales];
+        reportTitle = "PAYMENT-WISE SALES & REVENUE AUDIT REPORT";
+        periodLabel = "Consolidated Payment Mode Ledger";
+      } else if (reportType === 'FILTERED') {
+        targetSales = getFilteredSales();
+        reportTitle = "CUSTOM FILTERED SALES STATEMENT REPORT";
+        periodLabel = document.getElementById('tableSummaryLabel').textContent;
+      }
+
+      // Calculations
+      let totalBills = targetSales.length;
+      let grossSubtotal = 0;
+      let totalDiscounts = 0;
+      let totalTax = 0;
+      let netRevenue = 0;
+      let totalItemsQty = 0;
+
+      let cashAmt = 0, cashCount = 0;
+      let upiAmt = 0, upiCount = 0;
+      let cardAmt = 0, cardCount = 0;
+
+      targetSales.forEach(s => {
+        const total = Number(s.totalAmount || 0);
+        grossSubtotal += Number(s.subtotal || 0);
+        totalDiscounts += Number(s.discountAmount || 0);
+        totalTax += Number(s.taxAmount || 0);
+        netRevenue += total;
+
+        const pm = (s.paymentMethod || 'CASH').toUpperCase();
+        if (pm === 'CASH') { cashAmt += total; cashCount++; }
+        else if (pm === 'UPI') { upiAmt += total; upiCount++; }
+        else if (pm === 'CARD') { cardAmt += total; cardCount++; }
+
+        (s.items || []).forEach(i => {
+          totalItemsQty += (i.quantity || 1);
+        });
+      });
+
+      const genTimeStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + 
+                         now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+      // Rows for detailed table
+      const rowsHtml = targetSales.length === 0 ? `
+        <tr>
+          <td colspan="9" style="text-align:center; padding: 24px; color: #64748b;">No bills found for this reporting period.</td>
+        </tr>
+      ` : targetSales.map((s, idx) => {
+        const dObj = new Date(s.createdAt || Date.now());
+        const dStr = dObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) + ' ' + 
+                     dObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+        const items = s.items || [];
+        const itemsDetail = items.map(i => `${i.productName || 'Garment'} (${i.quantity || 1})`).join(', ');
+
+        return `
+          <tr>
+            <td style="text-align: center; color: #64748b;">${idx + 1}</td>
+            <td><strong>${s.invoiceNo || 'INV-000000'}</strong></td>
+            <td style="white-space: nowrap; font-size: 11px;">${dStr}</td>
+            <td>${s.cashierName || 'Cashier'}</td>
+            <td>
+              <div><strong>${s.customerName || 'Walk-in'}</strong></div>
+              <div style="font-size: 10px; color: #64748b;">${s.customerMobile || '-'}</div>
+            </td>
+            <td style="font-size: 11px; max-width: 200px;">${itemsDetail || 'Garment items'}</td>
+            <td style="text-align: center;"><strong>${s.paymentMethod || 'CASH'}</strong></td>
+            <td style="text-align: right;">₹${(s.taxAmount || 0).toFixed(2)}</td>
+            <td style="text-align: right; font-weight: 700; color: #0f172a;">₹${Number(s.totalAmount || 0).toFixed(2)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('salesReportModalTitle').textContent = `📊 ${reportTitle}`;
+
+      document.getElementById('salesReportContent').innerHTML = `
+        <!-- Report Letterhead Header -->
+        <div class="report-header-box">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <div style="font-size: 22px; font-weight: 900; color: #1e1b4b; letter-spacing: 0.5px;">READYMADE CLOTHING SHOP</div>
+              <div style="font-size: 12px; color: #475569; font-weight: 600;">Retail Apparel & Fashion Hub</div>
+              <div style="font-size: 11px; color: #64748b;">100 Feet Main Road, Retail Fashion Hub, Chennai | GSTIN: 33AAAAA0000A1Z5</div>
+              <div style="font-size: 11px; color: #64748b;">Contact: +91 98765 43210 | Email: accounts@readymadeshop.com</div>
+            </div>
+            <div style="text-align: right; font-size: 11px; color: #475569; background: #f1f5f9; padding: 10px 14px; border-radius: 6px; border: 1px solid #e2e8f0;">
+              <div><strong>AUDIT REPORT TYPE:</strong> ${reportType}</div>
+              <div><strong>PERIOD:</strong> ${periodLabel}</div>
+              <div><strong>GENERATED ON:</strong> ${genTimeStr}</div>
+              <div><strong>GENERATED BY:</strong> Admin (Shop Owner)</div>
+            </div>
+          </div>
+          <div style="margin-top: 14px; padding: 8px 12px; background: #1e1b4b; color: #ffffff; border-radius: 4px; font-weight: 800; font-size: 13px; text-align: center; letter-spacing: 0.5px;">
+            ${reportTitle}
+          </div>
+        </div>
+
+        <!-- Executive Financial Summary -->
+        <div class="report-summary-boxes">
+          <div class="rep-sum-card">
+            <div class="rep-sum-title">📦 Total Bills Generated</div>
+            <div class="rep-sum-val" style="color: #3b82f6;">${totalBills} <span style="font-size: 12px; font-weight: normal; color: #64748b;">Bills</span></div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Total ${totalItemsQty} items sold</div>
+          </div>
+
+          <div class="rep-sum-card">
+            <div class="rep-sum-title">💵 Gross Subtotal</div>
+            <div class="rep-sum-val">₹${grossSubtotal.toFixed(2)}</div>
+            <div style="font-size: 11px; color: #16a34a; margin-top: 2px;">Discounts: -₹${totalDiscounts.toFixed(2)}</div>
+          </div>
+
+          <div class="rep-sum-card">
+            <div class="rep-sum-title">🏛️ GST / Taxes (5%)</div>
+            <div class="rep-sum-val" style="color: #6366f1;">₹${totalTax.toFixed(2)}</div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Automated tax ledger</div>
+          </div>
+
+          <div class="rep-sum-card" style="background: #ecfdf5; border-color: #a7f3d0;">
+            <div class="rep-sum-title" style="color: #065f46;">💰 NET BILLED AMOUNT</div>
+            <div class="rep-sum-val" style="color: #059669; font-size: 24px;">₹${netRevenue.toFixed(2)}</div>
+            <div style="font-size: 11px; color: #047857; font-weight: 700; margin-top: 2px;">Total Net Revenue</div>
+          </div>
+        </div>
+
+        <!-- Payment Breakdown Matrix -->
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 12px; font-weight: 800; color: #1e293b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+            💳 Payment Mode Collection Summary:
+          </div>
+          <table class="report-table" style="margin-bottom: 0;">
+            <thead>
+              <tr>
+                <th>Payment Mode</th>
+                <th style="text-align: center;">Invoices Count</th>
+                <th style="text-align: right;">Total Amount (₹)</th>
+                <th style="text-align: right;">% Share of Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>💵 Cash Collection</strong></td>
+                <td style="text-align: center;">${cashCount}</td>
+                <td style="text-align: right; font-weight: 700; color: #166534;">₹${cashAmt.toFixed(2)}</td>
+                <td style="text-align: right;">${netRevenue > 0 ? ((cashAmt / netRevenue) * 100).toFixed(1) : 0}%</td>
+              </tr>
+              <tr>
+                <td><strong>📱 UPI / Online QR</strong></td>
+                <td style="text-align: center;">${upiCount}</td>
+                <td style="text-align: right; font-weight: 700; color: #3730a3;">₹${upiAmt.toFixed(2)}</td>
+                <td style="text-align: right;">${netRevenue > 0 ? ((upiAmt / netRevenue) * 100).toFixed(1) : 0}%</td>
+              </tr>
+              <tr>
+                <td><strong>💳 Credit / Debit Card</strong></td>
+                <td style="text-align: center;">${cardCount}</td>
+                <td style="text-align: right; font-weight: 700; color: #92400e;">₹${cardAmt.toFixed(2)}</td>
+                <td style="text-align: right;">${netRevenue > 0 ? ((cardAmt / netRevenue) * 100).toFixed(1) : 0}%</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td>Total Collections</td>
+                <td style="text-align: center;">${totalBills}</td>
+                <td style="text-align: right; color: #059669; font-size: 13px;">₹${netRevenue.toFixed(2)}</td>
+                <td style="text-align: right;">100.0%</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Detailed Invoices Itemized Table -->
+        <div>
+          <div style="font-size: 12px; font-weight: 800; color: #1e293b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+            📑 Itemized Bills Ledger:
+          </div>
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th style="width: 35px; text-align: center;">#</th>
+                <th>Invoice No</th>
+                <th>Date & Time</th>
+                <th>Cashier</th>
+                <th>Customer</th>
+                <th>Items Purchased</th>
+                <th style="text-align: center;">Payment</th>
+                <th style="text-align: right;">Tax (₹)</th>
+                <th style="text-align: right;">Net Amount (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="7" style="text-align: right; font-size: 13px;">TOTAL SUMMARY:</td>
+                <td style="text-align: right;">₹${totalTax.toFixed(2)}</td>
+                <td style="text-align: right; font-size: 14px; color: #059669;">₹${netRevenue.toFixed(2)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Signatures & Verification Footer -->
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px dashed #94a3b8; display: flex; justify-content: space-between; align-items: flex-end; font-size: 11px; color: #475569;">
+          <div>
+            <div><strong>System Verification:</strong> Complete & Verified POS Data</div>
+            <div style="color: #94a3b8; margin-top: 2px;">Readymade Garment Shop POS System &bull; Confidential</div>
+          </div>
+          <div style="display: flex; gap: 50px;">
+            <div style="text-align: center;">
+              <div style="height: 35px;"></div>
+              <div style="border-top: 1px solid #000; width: 140px; padding-top: 4px; font-weight: 700;">Accountant / Cashier</div>
+            </div>
+            <div style="text-align: center;">
+              <div style="height: 35px;"></div>
+              <div style="border-top: 1px solid #000; width: 140px; padding-top: 4px; font-weight: 700;">Authorized Signatory</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('salesReportModal').classList.add('show');
+    }
+
+    function closeSalesReportModal() {
+      document.getElementById('salesReportModal').classList.remove('show');
+    }
+
+    function printSalesReport() {
+      window.print();
+    }
+
+    // ----------------------------------------------------
+    // THERMAL BILL RECEIPT MODAL
+    // ----------------------------------------------------
+    function viewReceipt(saleId) {
+      const sale = allSales.find(s => s.id === saleId);
+      if (!sale) return;
+
+      const dateObj = new Date(sale.createdAt || Date.now());
+      const formattedDate = dateObj.toLocaleDateString('en-GB') + ' ' + dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+      const itemsHtml = (sale.items || []).map(i => `
+        <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
+          <div style="flex: 1;">
+            <div>${i.productName || 'Garment'}</div>
+            <div style="color: #64748b; font-size: 10px;">${i.size || 'Free Size'} / ${i.color || 'Std'} &times; ${i.quantity} @ ₹${(i.unitPrice || 0).toFixed(2)}</div>
+          </div>
+          <div style="font-weight: 700;">₹${(i.total || (i.unitPrice * i.quantity)).toFixed(2)}</div>
+        </div>
+      `).join('');
+
+      document.getElementById('receiptContent').innerHTML = `
+        <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px;">
+          <div style="font-size: 16px; font-weight: 900; letter-spacing: 1px;">READYMADE SHOP</div>
+          <div style="font-size: 11px; color: #475569;">100 Feet Main Road, Retail Fashion Hub</div>
+          <div style="font-size: 10px; color: #64748b;">GSTIN: 33AAAAA0000A1Z5 | Ph: +91 98765 43210</div>
+        </div>
+
+        <div style="font-size: 11px; margin-bottom: 8px; line-height: 1.4;">
+          <div style="display: flex; justify-content: space-between;">
+            <span><strong>Invoice:</strong> ${sale.invoiceNo}</span>
+            <span><strong>Date:</strong> ${formattedDate}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span><strong>Customer:</strong> ${sale.customerName || 'Walk-in'}</span>
+            <span><strong>Phone:</strong> ${sale.customerMobile || '-'}</span>
+          </div>
+          <div><strong>Cashier:</strong> ${sale.cashierName || 'Cashier'}</div>
+        </div>
+
+        <div style="border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 8px 0; margin-bottom: 8px;">
+          ${itemsHtml}
+        </div>
+
+        <div style="font-size: 11px; line-height: 1.5;">
+          <div style="display: flex; justify-content: space-between;">
+            <span>Subtotal:</span>
+            <span>₹${(sale.subtotal || 0).toFixed(2)}</span>
+          </div>
+          ${sale.discountAmount > 0 ? `
+            <div style="display: flex; justify-content: space-between; color: #16a34a;">
+              <span>Discount (${sale.discountPercent}%):</span>
+              <span>-₹${(sale.discountAmount || 0).toFixed(2)}</span>
+            </div>
+          ` : ''}
+          <div style="display: flex; justify-content: space-between;">
+            <span>GST (5%):</span>
+            <span>₹${(sale.taxAmount || 0).toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 900; border-top: 1px solid #000; padding-top: 4px; margin-top: 4px;">
+            <span>NET AMOUNT:</span>
+            <span>₹${(sale.totalAmount || 0).toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 4px; font-size: 10px; color: #475569;">
+            <span>Payment Method:</span>
+            <span><strong>${sale.paymentMethod || 'CASH'}</strong> (PAID)</span>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 14px; padding-top: 8px; border-top: 1px dashed #000; font-size: 11px;">
+          <div>*** THANK YOU FOR SHOPPING! ***</div>
+          <div style="font-size: 9px; color: #64748b; margin-top: 2px;">Goods once sold can be exchanged within 7 days with bill</div>
+        </div>
+      `;
+
+      document.getElementById('receiptModal').classList.add('show');
+    }
+
+    function closeReceiptModal() {
+      document.getElementById('receiptModal').classList.remove('show');
+    }
+
+    function logout() {
+      SecurityEngine.clearSession();
+      window.location.href = '../admin-login.html';
+    }
+
+    document.addEventListener('DOMContentLoaded', loadBillData);
+  </script>
+</body>
+</html>

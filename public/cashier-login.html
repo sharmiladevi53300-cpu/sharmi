@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cashier POS Login - Readymade Shop Management</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="auth-wrapper">
+    <div class="auth-card cashier-card">
+      <div class="auth-header">
+        <div class="auth-logo">💳</div>
+        <h1 class="auth-title">Cashier POS Terminal</h1>
+        <p class="auth-subtitle">Sign in to start checkout & billing counter shift</p>
+        <span class="role-badge cashier">CASHIER ACCESS ONLY</span>
+      </div>
+
+      <div id="alertBox" class="alert"></div>
+
+      <form id="cashierLoginForm">
+        <div class="form-group">
+          <label for="username">Cashier Username or Employee ID</label>
+          <input type="text" id="username" class="form-control" placeholder="e.g. EMP001 or cashier username" autocomplete="username" required autofocus>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="input-with-icon">
+            <input type="password" id="password" placeholder="Enter your cashier password" autocomplete="current-password" required>
+            <button type="button" class="toggle-pwd" id="togglePassword" title="Toggle password visibility">👁️</button>
+          </div>
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn btn-emerald btn-block" style="margin-top: 10px;">
+          Sign In to POS Counter →
+        </button>
+      </form>
+
+      <div class="security-callout" style="border-left-color: #059669;">
+        <strong>Important Policy:</strong>
+        Cashier accounts are registered and managed exclusively by the Store Administrator.
+        <div style="margin-top: 8px; font-size: 11px; background: #ecfdf5; padding: 6px 10px; border-radius: 4px; color: #065f46;">
+          💡 Demo Cashier: <strong>cashier1</strong> / <strong>Cashier@123</strong> (or ID: <strong>CSH001</strong>)
+        </div>
+      </div>
+
+      <div style="margin-top: 20px; text-align: center; font-size: 13px;">
+        <a href="admin-login.html" style="color: #7c3aed; font-weight: 500;">Switch to Admin Portal Login →</a>
+        <div style="margin-top: 8px;">
+          <a href="index.html" style="color: #64748b; font-size: 12px;">← Return to Main Portal</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/security.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await AppStore.init();
+
+      // Check if already logged in as Cashier
+      const currentUser = SecurityEngine.getCurrentUser();
+      if (currentUser && currentUser.role === 'CASHIER') {
+        window.location.href = SecurityEngine.resolvePath('cashier/index.html');
+        return;
+      }
+
+      const form = document.getElementById('cashierLoginForm');
+      const alertBox = document.getElementById('alertBox');
+      const submitBtn = document.getElementById('submitBtn');
+      const togglePwd = document.getElementById('togglePassword');
+      const pwdInput = document.getElementById('password');
+
+      togglePwd.addEventListener('click', () => {
+        const isPwd = pwdInput.type === 'password';
+        pwdInput.type = isPwd ? 'text' : 'password';
+        togglePwd.textContent = isPwd ? '🔒' : '👁️';
+      });
+
+      function showAlert(msg, type = 'error') {
+        alertBox.className = `alert alert-${type} show`;
+        alertBox.innerHTML = `<span>${type === 'error' ? '⚠️' : 'ℹ️'}</span> <div>${msg}</div>`;
+      }
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        alertBox.className = 'alert';
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Verifying cashier shift...';
+
+        const username = document.getElementById('username').value.trim();
+        const password = pwdInput.value;
+
+        try {
+          // Strictly authenticate with requested role = 'CASHIER'
+          const result = await AppStore.login(username, password, 'CASHIER');
+          showAlert('Cashier shift validated. Launching POS Counter...', 'success');
+          setTimeout(() => {
+            window.location.href = SecurityEngine.resolvePath('cashier/index.html');
+          }, 600);
+        } catch (err) {
+          showAlert(err.message || 'Invalid username or password.', 'error');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Sign In to POS Counter →';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

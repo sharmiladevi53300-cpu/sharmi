@@ -1,0 +1,2067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Terminal - Readymade Clothing Shop</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .pos-main-grid {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 18px;
+      padding: 16px;
+      height: calc(100vh - 65px);
+    }
+    @media (max-width: 900px) {
+      .pos-main-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+    }
+    .inactivity-bar {
+      display: none;
+      background: #f59e0b;
+      color: #78350f;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+    }
+    
+    /* Product Grid Layout */
+    .product-grid-view {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+      padding: 10px 0;
+    }
+    .product-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: box-shadow 0.2s, transform 0.2s;
+      position: relative;
+      cursor: context-menu;
+    }
+    .product-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .product-card-img-wrapper {
+      height: 120px;
+      background: #f8fafc;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .product-card-img-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .product-card-body {
+      padding: 10px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .product-card-id {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .product-card-title {
+      font-weight: 700;
+      font-size: 12px;
+      color: #0f172a;
+      line-height: 1.3;
+      margin-bottom: 4px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      height: 32px;
+    }
+    .product-card-qty {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .product-card-price {
+      font-weight: 700;
+      font-size: 13px;
+      color: #0f172a;
+    }
+    .product-card-stock {
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .product-card-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      border-top: 1px solid var(--border);
+      background: #f8fafc;
+    }
+    .card-action-btn {
+      border: none;
+      background: none;
+      padding: 6px 2px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.15s;
+    }
+    .card-action-btn:not(:last-child) {
+      border-right: 1px solid var(--border);
+    }
+    .card-action-btn.edit-btn {
+      color: #2563eb;
+    }
+    .card-action-btn.stock-btn {
+      color: #059669;
+    }
+    .card-action-btn.delete-btn {
+      color: #ef4444;
+    }
+    .card-action-btn:hover {
+      background: #e2e8f0;
+    }
+
+    /* Custom Context Menu */
+    .context-menu {
+      display: none;
+      position: absolute;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-lg);
+      z-index: 2000;
+      width: 180px;
+      padding: 4px 0;
+    }
+    .context-menu-item {
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .context-menu-item:hover {
+      background: #f1f5f9;
+    }
+    .context-menu-item.delete {
+      color: #ef4444;
+      border-top: 1px solid var(--border);
+    }
+    .context-menu-item.delete:hover {
+      background: #fee2e2;
+    }
+    
+    /* Print Styling for Stock Report Modal */
+    @media print {
+      body > *:not(#stockReportModal) {
+        display: none !important;
+      }
+      #stockReportModal {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: auto;
+        display: block !important;
+        background: white;
+        z-index: 9999;
+      }
+      #stockReportModal .modal-box {
+        max-width: 100% !important;
+        width: 100% !important;
+        box-shadow: none !important;
+        border: none !important;
+        transform: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      #stockReportModal .modal-header button, 
+      #stockReportModal .modal-footer, 
+      #stockReportModal .filter-card,
+      #stockReportModal button {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="inactivityWarning" class="inactivity-bar">
+    ⚠️ Inactivity Notice: You will be automatically logged out in 1 minute. Move your mouse or tap any button to continue billing.
+  </div>
+
+  <div class="main-wrapper" style="min-height: 100vh;">
+    <!-- Top Header -->
+    <header class="top-navbar" style="background: #1e1b4b; color: white; border-bottom: none;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="font-size: 24px;">🛡️</div>
+        <div>
+          <div style="font-weight: 700; font-size: 15px; color: #fff;">Readymade POS (Admin Terminal)</div>
+          <div style="font-size: 11px; color: #a5b4fc;">ROLE: ADMIN &bull; EXCLUSIVE CASHIER MANAGEMENT</div>
+        </div>
+      </div>
+
+      <div class="user-menu">
+        <div style="text-align: right; margin-right: 8px;">
+          <div style="font-size: 13px; font-weight: 600; color: #f8fafc;" id="adminNameDisplay">Administrator</div>
+          <div style="font-size: 11px; color: #cbd5e1;">Shop Owner</div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="window.open('../cashier/index.html', '_blank')" style="background:#059669; color:#fff; border-color:#10b981; font-weight:700;">
+          💳 Cashier Billing Counter ↗
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="openCashierManagementModal()" style="background:#312e81; color:#fff; border-color:#4338ca;">
+          👥 Cashier Management
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="window.location.href='products.html'" style="background:#0369a1; color:#fff; border-color:#0284c7;">
+          👚 Product Registration
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="window.location.href='barcode-labels.html'" style="background:#4f46e5; color:#fff; border-color:#818cf8; font-weight:700;">
+          🏷️ Barcode Labels
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="window.location.href='bills.html'" style="background:#059669; color:#fff; border-color:#10b981; font-weight:700;">
+          🧾 Bill Management
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="window.location.href='stock-report.html'" style="background:#0891b2; color:#fff; border-color:#06b6d4; font-weight:700;">
+          📈 Stock Valuation & Inward
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="window.location.href='damaged-returns.html'" style="background:#dc2626; color:#fff; border-color:#ef4444; font-weight:700;">
+          🚨 Damage & Returns
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="openShiftSalesModal()" style="background:#1e293b; color:#fff; border-color:#334155;">
+          📊 My Session Sales
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="logout()">
+          Sign Out 🚪
+        </button>
+      </div>
+    </header>
+
+    <!-- Toast Alert -->
+    <div id="posAlert" class="alert" style="margin: 10px 16px 0 16px;"></div>
+
+    <!-- POS Content Grid -->
+    <div class="pos-main-grid">
+      <!-- Left Column: Search, Category Filter & Products Grid -->
+      <div class="pos-products" style="display: flex; flex-direction: column; overflow: hidden;">
+        <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; margin-bottom: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 240px;">
+            <input type="text" id="barcodeSearch" class="form-control" placeholder="🔍 Scan Barcode (e.g. 8901001) or search garment name / SKU..." autofocus>
+          </div>
+          <select id="categoryFilter" class="form-control" style="width: 160px;">
+            <option value="ALL">All Categories</option>
+            <option value="Shirts">Shirts</option>
+            <option value="T-Shirts">T-Shirts</option>
+            <option value="Jeans">Jeans</option>
+            <option value="Trousers">Trousers</option>
+            <option value="Sarees">Sarees</option>
+            <option value="Kurtis">Kurtis</option>
+            <option value="Kids Wear">Kids Wear</option>
+          </select>
+        </div>
+
+        <div class="product-grid" id="posProductGrid" style="flex: 1; overflow-y: auto; align-content: start;">
+          <!-- Garment Items Injected Here -->
+        </div>
+      </div>
+
+      <!-- Right Column: Cart & Payment Checkout -->
+      <div class="pos-cart" style="display: flex; flex-direction: column; height: 100%;">
+        <div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+          <div>
+            <h3 style="font-size: 15px; font-weight: 700; margin: 0; color: #0f172a;">🧾 Create Customer Bill</h3>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+              Items: <strong id="cartCount">0</strong> | Total Qty: <strong id="cartTotalQty" style="color: #6366f1;">0</strong> pcs
+            </div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="clearCart()" style="font-size: 11px; padding: 3px 8px; color: #ef4444; border-color: #fca5a5;">Clear Bill</button>
+        </div>
+
+        <!-- Customer Info with Masked Mobile Text Box -->
+        <div style="padding: 10px 16px; background: #ffffff; border-bottom: 1px solid var(--border);">
+          <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 8px;">
+            <div>
+              <label for="custMobileInput" style="font-size: 10px; font-weight: 700; color: #475569; display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px;">
+                <span>📱 CUSTOMER MOBILE</span>
+                <span style="color: #4f46e5; font-weight: 700; font-size: 9px; background: #e0e7ff; padding: 1px 5px; border-radius: 3px;">MASKED</span>
+              </label>
+              <div style="position: relative; display: flex; align-items: center;">
+                <span style="position: absolute; left: 8px; font-size: 12px; font-weight: 700; color: #64748b; pointer-events: none;">+91</span>
+                <input type="text" id="custMobileInput" class="form-control" style="font-size: 12px; padding: 6px 8px 6px 36px; font-family: monospace; font-weight: 600; letter-spacing: 1px;" placeholder="XXXXX-XXXXX" maxlength="11" oninput="applyMobileMask(this)">
+              </div>
+            </div>
+            <div>
+              <label for="custNameInput" style="font-size: 10px; font-weight: 700; color: #475569; display: block; margin-bottom: 3px;">
+                👤 CUSTOMER NAME
+              </label>
+              <input type="text" id="custNameInput" class="form-control" style="font-size: 12px; padding: 6px 10px;" placeholder="Walk-in Customer">
+            </div>
+          </div>
+        </div>
+
+        <!-- Cart Items List -->
+        <div class="cart-items" id="cartItemList" style="flex: 1; overflow-y: auto; padding: 12px 16px;">
+          <div style="text-align: center; color: #94a3b8; padding-top: 60px;">
+            <div style="font-size: 36px; margin-bottom: 8px;">🛒</div>
+            <div style="font-weight: 500;">No items in cart</div>
+            <div style="font-size: 12px; margin-top: 4px;">Click an apparel card or scan barcode to add</div>
+          </div>
+        </div>
+
+        <!-- Summary: Subtotal, Discount % + Discount Amount, Tax % + Tax Amount, Total Amount -->
+        <div class="cart-summary" style="padding: 14px 16px; border-top: 1px solid var(--border); background: white;">
+          <!-- Total Quantity -->
+          <div class="summary-line" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; background: #f0fdf4; padding: 4px 8px; border-radius: 4px; border: 1px solid #bbf7d0;">
+            <span style="color: #166534; font-size: 13px; font-weight: 700;">📦 Total Quantity:</span>
+            <span id="summaryTotalQty" style="font-weight: 800; color: #15803d; font-size: 14px;">0 pcs</span>
+          </div>
+
+          <div class="summary-line" style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span style="color: var(--text-muted); font-size: 13px;">Items Subtotal:</span>
+            <span id="summarySubtotal" style="font-weight: 600; color: #0f172a;">₹0.00</span>
+          </div>
+          
+          <!-- Discount % Input -->
+          <div class="summary-line" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="color: var(--text-muted); font-size: 13px;">Discount (%):</span>
+            <div style="display: flex; align-items: center; background: #f8fafc; border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px;">
+              <input type="number" id="discountInput" min="0" max="20" value="0" style="width: 45px; border: none; background: transparent; text-align: right; font-weight: 700; font-size: 13px;" oninput="onDiscountPercentChange()">
+              <span style="font-size: 12px; color: #64748b; margin-left: 3px;">%</span>
+            </div>
+          </div>
+
+          <!-- Dedicated Discount Amount Row -->
+          <div class="summary-line" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; background: #fef2f2; padding: 6px 10px; border-radius: 6px; border: 1px dashed #fca5a5;">
+            <div style="display: flex; align-items: center; gap: 5px;">
+              <span style="font-size: 14px;">🏷️</span>
+              <strong style="color: #991b1b; font-size: 13px;">Discount Amount:</strong>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="display: flex; align-items: center; background: #ffffff; border: 1px solid #fca5a5; border-radius: 4px; padding: 1px 6px;">
+                <span style="font-size: 11px; color: #dc2626; font-weight: 700; margin-right: 2px;">₹</span>
+                <input type="number" id="discountAmountInput" min="0" value="0.00" step="0.5" style="width: 65px; border: none; background: transparent; text-align: right; font-weight: 800; font-size: 13px; color: #dc2626;" oninput="onDiscountAmountChange()">
+              </div>
+              <span id="summaryDiscountAmount" style="font-weight: 800; color: #dc2626; font-size: 14px; min-width: 65px; text-align: right;">- ₹0.00</span>
+            </div>
+          </div>
+
+          <!-- Tax % + Tax Amount -->
+          <div class="summary-line" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="color: var(--text-muted); font-size: 13px;">GST / Tax (<span id="dispTaxPercent">5</span>%):</span>
+            <span id="summaryTax" style="font-weight: 600; color: #475569;">+ ₹0.00</span>
+          </div>
+
+          <!-- Total Amount -->
+          <div class="summary-total" style="margin-top: 8px; padding-top: 10px; border-top: 2px dashed var(--border); display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 700; font-size: 14px; text-transform: uppercase; color: #0f172a;">Total Amount:</span>
+            <span style="color: #059669; font-size: 20px; font-weight: 800;" id="summaryTotal">₹0.00</span>
+          </div>
+
+          <!-- Payment Options -->
+          <div style="margin-top: 10px;">
+            <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">PAYMENT METHOD:</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px;">
+              <button type="button" class="btn btn-outline btn-sm pay-btn active" data-method="CASH" onclick="selectPaymentMethod('CASH', this)">💵 Cash</button>
+              <button type="button" class="btn btn-outline btn-sm pay-btn" data-method="UPI" onclick="selectPaymentMethod('UPI', this)">📱 UPI / QR</button>
+              <button type="button" class="btn btn-outline btn-sm pay-btn" data-method="CARD" onclick="selectPaymentMethod('CARD', this)">💳 Card</button>
+            </div>
+
+            <!-- Cash Tender Calculator -->
+            <div id="cashCalcArea" style="display: flex; gap: 8px; align-items: center; background: #f1f5f9; padding: 8px 10px; border-radius: 6px; margin-bottom: 10px;">
+              <div style="font-size: 11px; color: #475569; font-weight: 600; white-space: nowrap;">Cash Received:</div>
+              <input type="number" id="cashTendered" class="form-control" style="padding: 4px 8px; font-size: 12px;" placeholder="₹ Amount" oninput="calculateChange()">
+              <div style="font-size: 11px; white-space: nowrap;">Change: <strong id="changeReturnVal" style="color: #059669;">₹0.00</strong></div>
+            </div>
+
+            <button id="checkoutBtn" class="btn btn-emerald btn-block" style="padding: 12px; font-size: 14px; font-weight: 700;" onclick="handleCheckout()">
+              Complete Sale & Print Receipt 🧾
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- MODAL: CASHIER DIRECTORY -->
+  <div class="modal-backdrop" id="cashierManagementModal">
+    <div class="modal-box" style="max-width: 900px; width: 95%;">
+      <div class="modal-header" style="border-bottom: 1px solid var(--border);">
+        <h3 style="font-size: 18px;">👥 Cashier Staff Directory</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeCashierManagementModal()">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+          <div style="font-size: 12px; color: var(--text-muted); max-width: 550px;">
+            🛡️ <strong>Security Invariant:</strong> Only authenticated Administrators are authorized to register, edit, suspend, or delete cashier accounts.
+          </div>
+          <button class="btn btn-purple" onclick="openRegisterCashierModal()">
+            + Register New Cashier
+          </button>
+        </div>
+        <div id="cshListAlert" class="alert"></div>
+        <div class="table-responsive" style="max-height: 420px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+          <table>
+            <thead>
+              <tr>
+                <th>Cashier Name</th>
+                <th>Employee ID</th>
+                <th>Username</th>
+                <th>Status</th>
+                <th>Created On</th>
+                <th style="width: 250px; text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="cashiersTableBody">
+              <!-- Dynamically Populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top: 1px solid var(--border);">
+        <button class="btn btn-outline" onclick="closeCashierManagementModal()">Close Directory</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: REGISTER CASHIER -->
+  <div class="modal-backdrop" id="registerCashierModal" style="z-index: 1100;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="font-size: 18px;">Register New Cashier Account</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeRegisterCashierModal()">✕</button>
+      </div>
+      <form id="registerCashierForm">
+        <div class="modal-body">
+          <div id="cshModalAlert" class="alert"></div>
+
+          <div class="form-group">
+            <label for="cshFullName">Full Name *</label>
+            <input type="text" id="cshFullName" class="form-control" placeholder="e.g. Rahul Sharma" required>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div class="form-group">
+              <label for="cshEmployeeId">Employee ID *</label>
+              <input type="text" id="cshEmployeeId" class="form-control" placeholder="e.g. CSH002" required>
+            </div>
+            <div class="form-group">
+              <label for="cshUsername">Username *</label>
+              <input type="text" id="cshUsername" class="form-control" placeholder="e.g. rahul_csh" required>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div class="form-group">
+              <label for="cshMobile">Mobile Number</label>
+              <input type="tel" id="cshMobile" class="form-control" placeholder="+91 9876543210">
+            </div>
+            <div class="form-group">
+              <label for="cshEmail">Email Address</label>
+              <input type="email" id="cshEmail" class="form-control" placeholder="rahul@readymadeshop.com">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="cshPassword">Temporary Password (Min 8 chars, mixed complexity) *</label>
+            <input type="password" id="cshPassword" class="form-control" placeholder="Enter secure password" required>
+          </div>
+
+          <div class="security-callout" style="font-size: 11px; margin-top: 10px;">
+            <strong>Server-Side RBAC Enforcement:</strong>
+            The server automatically enforces <code>role = "CASHIER"</code>. Client cannot assign Admin privileges through this endpoint.
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeRegisterCashierModal()">Cancel</button>
+          <button type="submit" class="btn btn-purple">Register Cashier</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT CASHIER -->
+  <div class="modal-backdrop" id="editCashierModal" style="z-index: 1100;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="font-size: 18px;">Edit Cashier Account</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeEditCashierModal()">✕</button>
+      </div>
+      <form id="editCashierForm">
+        <input type="hidden" id="editCashierId">
+        <div class="modal-body">
+          <div id="editCshModalAlert" class="alert"></div>
+
+          <div class="form-group">
+            <label for="editCshFullName">Full Name *</label>
+            <input type="text" id="editCshFullName" class="form-control" placeholder="e.g. Rahul Sharma" required>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div class="form-group">
+              <label for="editCshMobile">Mobile Number</label>
+              <input type="tel" id="editCshMobile" class="form-control" placeholder="+91 9876543210">
+            </div>
+            <div class="form-group">
+              <label for="editCshEmail">Email Address</label>
+              <input type="email" id="editCshEmail" class="form-control" placeholder="rahul@readymadeshop.com">
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeEditCashierModal()">Cancel</button>
+          <button type="submit" class="btn btn-purple">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: RESET CASHIER PASSWORD -->
+  <div class="modal-backdrop" id="resetPasswordModal" style="z-index: 1100;">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 style="font-size: 18px;">Reset Cashier Password</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeResetPasswordModal()">✕</button>
+      </div>
+      <form id="resetPasswordForm">
+        <input type="hidden" id="resetCashierId">
+        <div class="modal-body">
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
+            Set a new temporary password for cashier: <strong id="resetCashierName"></strong>
+          </p>
+          <div class="form-group">
+            <label for="newPassword">New Password (Min 8 chars, complexity required) *</label>
+            <input type="password" id="newPassword" class="form-control" placeholder="Enter new password" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeResetPasswordModal()">Cancel</button>
+          <button type="submit" class="btn btn-purple">Update Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CASHIER ACTIVITY -->
+  <div class="modal-backdrop" id="cashierActivityModal" style="z-index: 1100;">
+    <div class="modal-box" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 style="font-size: 18px;">Cashier Sales & Activity</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeCashierActivityModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="cshActivitySummary" style="margin-bottom: 14px;"></div>
+        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Invoice</th>
+                <th>Total</th>
+                <th>Payment</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="cshActivitySalesBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeCashierActivityModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: RECEIPT PREVIEW -->
+  <div class="modal-backdrop" id="receiptModal">
+    <div class="modal-box" style="max-width: 380px;">
+      <div class="modal-header">
+        <h3 style="font-size: 16px;">Sale Receipt Generated</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeReceiptModal()">✕</button>
+      </div>
+      <div class="modal-body" id="receiptContent" style="font-family: monospace; font-size: 12px; background: #fff;">
+        <!-- Injected Printable Receipt -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeReceiptModal()">New Customer</button>
+        <button class="btn btn-emerald" onclick="window.print()">Print Receipt 🖨️</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SESSION SALES -->
+  <div class="modal-backdrop" id="shiftModal">
+    <div class="modal-box" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 style="font-size: 16px;">My Admin Session Sales History</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeShiftModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="shiftSummaryStats" style="display: flex; gap: 12px; margin-bottom: 14px;"></div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Invoice</th>
+                <th>Time</th>
+                <th>Payment</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody id="shiftTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: space-between;">
+        <button class="btn btn-outline" onclick="closeShiftModal()">Close</button>
+        <button class="btn btn-purple" onclick="window.location.href='bills.html'" style="font-weight: 700;">
+          🧾 Open Full Bill Management & Reports ↗
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PRODUCT REGISTRATION -->
+  <div class="modal-backdrop" id="productRegistrationModal">
+    <div class="modal-box" style="max-width: 950px; width: 95%;">
+      <div class="modal-header">
+        <h3 style="font-size: 16px; font-weight: 700;">👚 Product Registration & Catalog</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeProductRegistrationModal()">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <div style="display: grid; grid-template-columns: 330px 1fr; gap: 20px;">
+          
+          <!-- Left side: Form -->
+          <div style="background: #f8fafc; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+            <h4 style="font-size: 13px; font-weight: 700; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 4px;">Register New Product</h4>
+            <form id="productRegisterForm">
+              <div id="prdRegAlert" class="alert" style="padding: 6px 10px; font-size:12px; margin-bottom:10px;"></div>
+              
+              <div class="form-group" style="margin-bottom: 8px;">
+                <label for="regProductId" style="font-size:11px; margin-bottom:2px;">Product ID *</label>
+                <input type="text" id="regProductId" class="form-control" style="padding: 5px 8px; font-size:12px;" placeholder="e.g. prd_09 or custom ID" required>
+              </div>
+              
+              <div class="form-group" style="margin-bottom: 8px;">
+                <label for="regProductName" style="font-size:11px; margin-bottom:2px;">Product Name *</label>
+                <input type="text" id="regProductName" class="form-control" style="padding: 5px 8px; font-size:12px;" placeholder="e.g. Designer Kurta" required>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 8px;">
+                <label for="regProductDesc" style="font-size:11px; margin-bottom:2px;">Product Description</label>
+                <textarea id="regProductDesc" class="form-control" style="padding: 5px 8px; font-size:12px; height: 40px; resize: none;" placeholder="Details about the garment..."></textarea>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 8px;">
+                <label for="regProductImageFile" style="font-size:11px; margin-bottom:2px;">Product Image (Upload Capability) *</label>
+                <input type="file" id="regProductImageFile" class="form-control" style="padding: 4px 8px; font-size:11px;" accept="image/*" required>
+                <input type="hidden" id="regProductImageBase64">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 8px;">
+                <label for="regProductStock" style="font-size:11px; margin-bottom:2px;">Product Stock *</label>
+                <input type="number" id="regProductStock" class="form-control" style="padding: 5px 8px; font-size:12px;" value="10" min="0" required>
+                <input type="hidden" id="regProductQty" value="1 piece">
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="regProductMRP" style="font-size:11px; margin-bottom:2px;">Product MRP (₹) *</label>
+                  <input type="number" step="0.01" id="regProductMRP" class="form-control" style="padding: 5px 8px; font-size:12px;" placeholder="999" required oninput="calculateRegSellingPrice()">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="regProductDiscount" style="font-size:11px; margin-bottom:2px;">Discount (%)</label>
+                  <input type="number" step="0.1" id="regProductDiscount" class="form-control" style="padding: 5px 8px; font-size:12px;" value="0" min="0" max="100" oninput="calculateRegSellingPrice()">
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="regProductSellingPrice" style="font-size:11px; margin-bottom:2px;">Selling Price (₹) *</label>
+                  <input type="number" step="0.01" id="regProductSellingPrice" class="form-control" style="padding: 5px 8px; font-size:12px;" placeholder="899" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="regProductGST" style="font-size:11px; margin-bottom:2px;">GST (%)</label>
+                  <input type="number" step="1" id="regProductGST" class="form-control" style="padding: 5px 8px; font-size:12px;" value="5" min="0" required>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="regProductCategory" style="font-size:11px; margin-bottom:2px;">Category</label>
+                  <select id="regProductCategory" class="form-control" style="padding: 5px 8px; font-size:12px;">
+                    <option value="Shirts">Shirts</option>
+                    <option value="T-Shirts">T-Shirts</option>
+                    <option value="Jeans">Jeans</option>
+                    <option value="Trousers">Trousers</option>
+                    <option value="Sarees">Sarees</option>
+                    <option value="Kurtis">Kurtis</option>
+                    <option value="Kids Wear">Kids Wear</option>
+                    <option value="General" selected>General</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="regProductSize" style="font-size:11px; margin-bottom:2px;">Size / Color</label>
+                  <input type="text" id="regProductSize" class="form-control" style="padding: 5px 8px; font-size:12px;" value="Free Size" placeholder="e.g. XL/Black">
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-emerald btn-block" style="padding: 8px; font-size: 13px; font-weight:700;">Save Registered Product</button>
+            </form>
+          </div>
+          
+          <!-- Right side: Catalog List (Box Type Grid View) -->
+          <div style="display: flex; flex-direction: column; overflow: hidden; flex: 1;">
+            <h4 style="font-size: 13px; font-weight: 700; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+              <span>📦 Registered Products Directory</span>
+              <span style="font-size: 10px; font-weight: normal; color: var(--text-muted);">💡 Right-click any box to open options menu</span>
+            </h4>
+            <div id="regProductsGrid" class="product-grid-view" style="flex: 1; max-height: 480px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px;">
+              <!-- Dynamic box cards injected here -->
+            </div>
+          </div>
+          
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeProductRegistrationModal()">Close Registration</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: STOCK VALUATION REPORT -->
+  <div class="modal-backdrop" id="stockReportModal" style="z-index: 1100;">
+    <div class="modal-box" style="max-width: 1000px; width: 95%;">
+      <div class="modal-header">
+        <h3 style="font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+          <span>📈 Stock Valuation & Levels Report</span>
+        </h3>
+        <button class="btn btn-outline btn-sm" onclick="closeStockReportModal()">✕</button>
+      </div>
+      <div class="modal-body" style="max-height: 500px; overflow-y: auto; padding: 20px;">
+        <!-- Stats Widgets -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px;">
+          <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px;">
+            <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">Total Active Products</div>
+            <div style="font-size: 18px; font-weight: 700; color: #0f172a;" id="rptTotalProducts">0</div>
+          </div>
+          <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px;">
+            <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">Total Stock Quantity</div>
+            <div style="font-size: 18px; font-weight: 700; color: #0f172a;" id="rptTotalStock">0</div>
+          </div>
+          <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px;">
+            <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">Inventory MRP Value</div>
+            <div style="font-size: 18px; font-weight: 700; color: #0f172a;" id="rptTotalMRP">₹0.00</div>
+          </div>
+          <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px;">
+            <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">Inventory Selling Value</div>
+            <div style="font-size: 18px; font-weight: 700; color: #0f172a;" id="rptTotalSelling">₹0.00</div>
+          </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; background: #f8fafc; padding: 10px; border-radius: 4px; border: 1px solid var(--border); align-items: center;">
+          <div style="display: flex; flex-direction: column; gap: 4px; min-width: 160px;">
+            <label for="rptCategory" style="font-size: 10px; font-weight: 600; color: #475569;">Category</label>
+            <select id="rptCategory" class="form-control" style="padding: 4px 8px; font-size: 11px; height: 28px;">
+              <option value="ALL">All Categories</option>
+            </select>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px; min-width: 160px;">
+            <label for="rptStockLevel" style="font-size: 10px; font-weight: 600; color: #475569;">Stock Level</label>
+            <select id="rptStockLevel" class="form-control" style="padding: 4px 8px; font-size: 11px; height: 28px;">
+              <option value="ALL">All Stock Levels</option>
+              <option value="INSTOCK">In Stock Only (>= 5)</option>
+              <option value="LOWSTOCK">Low Stock Alert (< 5)</option>
+              <option value="OUTOFSTOCK">Out of Stock (= 0)</option>
+            </select>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="printStockReportModal()" style="margin-left: auto; height: 32px; font-size: 11px; display: flex; align-items: center; gap: 6px;">
+            🖨️ Print Report
+          </button>
+        </div>
+
+        <!-- Table -->
+        <div class="table-responsive" style="border: 1px solid var(--border); border-radius: var(--radius-sm);">
+          <table style="width: 100%;">
+            <thead>
+              <tr>
+                <th>Product ID</th>
+                <th>Name / Size</th>
+                <th>Category</th>
+                <th>MRP (₹)</th>
+                <th>Selling (₹)</th>
+                <th style="text-align: center;">Stock</th>
+                <th>Status</th>
+                <th>MRP Value</th>
+                <th>Selling Value</th>
+              </tr>
+            </thead>
+            <tbody id="rptValuationTableBody">
+              <!-- Injected -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeStockReportModal()">Close Report</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT PRODUCT -->
+  <div class="modal-backdrop" id="editProductModal" style="z-index: 1200;">
+    <div class="modal-box" style="max-width: 460px;">
+      <div class="modal-header">
+        <h3 style="font-size: 16px; font-weight: 700;">✏️ Edit Product Details</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeEditProductModal()">✕</button>
+      </div>
+      <form id="editProductForm">
+        <input type="hidden" id="editProdId">
+        <div class="modal-body" style="max-height: 480px; overflow-y: auto;">
+          <div id="editPrdAlert" class="alert" style="padding: 8px 10px; font-size:12px; margin-bottom:12px;"></div>
+          
+          <div class="form-group">
+            <label for="editProdName">Product Name *</label>
+            <input type="text" id="editProdName" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label for="editProdDesc">Product Description</label>
+            <textarea id="editProdDesc" class="form-control" style="height: 50px; resize: none;"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="editProdImageFile">Product Image (Upload new to replace)</label>
+            <input type="file" id="editProdImageFile" class="form-control" accept="image/*">
+            <input type="hidden" id="editProdImageBase64">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+              <label for="editProdStock">Product Stock *</label>
+              <input type="number" id="editProdStock" class="form-control" min="0" required>
+              <input type="hidden" id="editProdQty" value="1 piece">
+            </div>
+            <div class="form-group">
+              <label for="editProdGST">GST Rate (%)</label>
+              <input type="number" step="1" id="editProdGST" class="form-control" min="0" required>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+              <label for="editProdMRP">Product MRP (₹) *</label>
+              <input type="number" step="0.01" id="editProdMRP" class="form-control" required oninput="calculateEditSellingPrice()">
+            </div>
+            <div class="form-group">
+              <label for="editProdDiscount">Discount (%)</label>
+              <input type="number" step="0.1" id="editProdDiscount" class="form-control" min="0" max="100" oninput="calculateEditSellingPrice()">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="editProdSellingPrice">Selling Price (₹) *</label>
+            <input type="number" step="0.01" id="editProdSellingPrice" class="form-control" required>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label for="editProdCategory">Category</label>
+              <select id="editProdCategory" class="form-control">
+                <option value="Shirts">Shirts</option>
+                <option value="T-Shirts">T-Shirts</option>
+                <option value="Jeans">Jeans</option>
+                <option value="Trousers">Trousers</option>
+                <option value="Sarees">Sarees</option>
+                <option value="Kurtis">Kurtis</option>
+                <option value="Kids Wear">Kids Wear</option>
+                <option value="General">General</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label for="editProdSize">Size / Color Variant</label>
+              <input type="text" id="editProdSize" class="form-control" placeholder="e.g. XL/Black">
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeEditProductModal()">Cancel</button>
+          <button type="submit" class="btn btn-emerald">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ADJUST STOCK -->
+  <div class="modal-backdrop" id="adjustStockModal" style="z-index: 1200;">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 style="font-size: 16px; font-weight: 700;">📦 Adjust Product Stock</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeAdjustStockModal()">✕</button>
+      </div>
+      <form id="adjustStockForm">
+        <input type="hidden" id="adjProductId">
+        <div class="modal-body">
+          <div id="adjRegAlert" class="alert" style="padding: 8px 10px; font-size:12px; margin-bottom:12px;"></div>
+          
+          <div class="form-group">
+            <label style="font-size: 11px; margin-bottom: 2px;">Garment Name</label>
+            <div id="adjProductNameDisplay" style="font-weight: 700; font-size: 14px; padding: 6px 0;"></div>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 12px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size: 11px; margin-bottom: 2px;">Current Stock</label>
+              <div id="adjCurrentStockDisplay" style="font-weight: 700; font-size: 16px; color:#3b82f6; padding: 6px 0;">0</div>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label for="adjType" style="font-size: 11px; margin-bottom: 2px;">Adjustment Type</label>
+              <select id="adjType" class="form-control" style="padding: 6px 10px; font-size:13px;" required>
+                <option value="STOCK_IN" selected>STOCK_IN (Add Stock)</option>
+                <option value="STOCK_OUT">STOCK_OUT (Deduct Stock)</option>
+                <option value="RETURN">RETURN (Return to Stock)</option>
+                <option value="ADJUSTMENT">ADJUSTMENT (Reset Stock)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="adjQty">Quantity *</label>
+            <input type="number" id="adjQty" class="form-control" placeholder="Enter stock quantity" min="1" required>
+          </div>
+
+          <div class="form-group">
+            <label for="adjReason">Adjustment Reason / Notes</label>
+            <input type="text" id="adjReason" class="form-control" placeholder="e.g. New stock consignment #5">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeAdjustStockModal()">Cancel</button>
+          <button type="submit" class="btn btn-purple">Apply Stock Adjustment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../js/security.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/barcode.js"></script>
+  <script>
+    // Guard Admin Route
+    if (!SecurityEngine.guardPage('ADMIN')) {
+      // Guard will redirect if not authenticated
+    }
+
+    const currentAdmin = SecurityEngine.getCurrentUser();
+    if (currentAdmin) {
+      document.getElementById('adminNameDisplay').textContent = currentAdmin.fullName || currentAdmin.username;
+    }
+
+    let cart = [];
+    let selectedPayment = 'CASH';
+    let cachedProducts = [];
+
+    function showPosAlert(msg, type = 'success') {
+      const alertEl = document.getElementById('posAlert');
+      alertEl.className = `alert alert-${type} show`;
+      alertEl.innerHTML = `<span>${type === 'success' ? '✅' : '⚠️'}</span> <div>${msg}</div>`;
+      setTimeout(() => { alertEl.className = 'alert'; }, 3500);
+    }
+
+    function showToast(msg, type = 'success') {
+      showPosAlert(msg, type);
+    }
+
+    async function loadProducts() {
+      const token = localStorage.getItem('rms_auth_token');
+      try {
+        cachedProducts = await AppStore.getProducts(token);
+        renderProductGrid();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function renderProductGrid() {
+      const search = document.getElementById('barcodeSearch').value.toLowerCase().trim();
+      const cat = document.getElementById('categoryFilter').value;
+      const grid = document.getElementById('posProductGrid');
+      grid.innerHTML = '';
+
+      const filtered = cachedProducts.filter(p => {
+        if (!p.isActive) return false;
+        const matchesCat = cat === 'ALL' || p.category === cat;
+        const matchesSearch = !search ||
+          p.name.toLowerCase().includes(search) ||
+          p.sku.toLowerCase().includes(search) ||
+          p.barcode.includes(search);
+        return matchesCat && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #64748b; padding: 40px;">No matching clothing products found.</div>`;
+        return;
+      }
+
+      filtered.forEach(p => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'product-item';
+        itemEl.innerHTML = `
+          <div style="height: 100px; overflow: hidden; margin-bottom: 8px; border-radius: 4px; display: flex; align-items: center; justify-content: center; background: #f8fafc; border: 1px solid var(--border);">
+            <img src="${p.image || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=150'}" alt="${p.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=150'">
+          </div>
+          <div style="font-weight: 700; font-size: 13px; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 34px;" title="${p.name}">${p.name}</div>
+          <div style="margin-bottom: 6px;">
+            <span class="product-tag">${p.size}</span>
+            <span class="product-tag">${p.color}</span>
+          </div>
+          <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">SKU: ${p.sku} | Barcode: ${p.barcode}</div>
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 8px; border-top: 1px dashed var(--border);">
+            <div>
+              <div class="product-price">₹${p.sellingPrice.toFixed(2)}</div>
+              <div style="font-size: 11px; color: ${p.stockQuantity <= 3 ? '#ef4444' : '#64748b'};">
+                Stock: <strong>${p.stockQuantity}</strong>
+              </div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); BarcodeEngine.openLabelModal(cachedProducts.find(x => x.id === '${p.id}'), cachedProducts)" style="padding: 3px 8px; font-size: 11px; font-weight: 700; color: #4f46e5; border-color: #c7d2fe; background: #fff;" title="Print Barcode Label">
+              🏷️ Label
+            </button>
+          </div>
+        `;
+        itemEl.addEventListener('click', () => addToCart(p));
+        grid.appendChild(itemEl);
+      });
+    }
+
+    function addToCart(product) {
+      if (product.stockQuantity <= 0) {
+        showPosAlert(`"${product.name}" is out of stock!`, 'error');
+        return;
+      }
+
+      const existing = cart.find(i => i.productId === product.id);
+      if (existing) {
+        if (existing.quantity >= product.stockQuantity) {
+          showPosAlert(`Cannot add more. Available stock is ${product.stockQuantity}.`, 'error');
+          return;
+        }
+        existing.quantity += 1;
+      } else {
+        cart.push({ productId: product.id, quantity: 1 });
+      }
+
+      renderCart();
+      updateCartSummary();
+    }
+
+    function changeQuantity(productId, delta) {
+      const item = cart.find(i => i.productId === productId);
+      if (!item) return;
+      const product = cachedProducts.find(p => p.id === productId);
+      if (!product) return;
+
+      const newQty = item.quantity + delta;
+      if (newQty <= 0) {
+        cart = cart.filter(i => i.productId !== productId);
+      } else if (newQty > product.stockQuantity) {
+        showPosAlert(`Cannot exceed available stock of ${product.stockQuantity}.`, 'error');
+        return;
+      } else {
+        item.quantity = newQty;
+      }
+
+      renderCart();
+      updateCartSummary();
+    }
+
+    function removeFromCart(productId) {
+      cart = cart.filter(i => i.productId !== productId);
+      renderCart();
+      updateCartSummary();
+    }
+
+    function clearCart() {
+      cart = [];
+      renderCart();
+      updateCartSummary();
+    }
+
+    function applyMobileMask(input) {
+      const clean = input.value.replace(/\D/g, '').slice(0, 10);
+      if (clean.length > 5) {
+        input.value = clean.slice(0, 5) + '-' + clean.slice(5);
+      } else {
+        input.value = clean;
+      }
+    }
+
+    function renderCart() {
+      const container = document.getElementById('cartItemList');
+      const totalItemsCount = cart.length;
+      const totalUnitsCount = cart.reduce((acc, i) => acc + i.quantity, 0);
+
+      document.getElementById('cartCount').textContent = totalItemsCount;
+      const totalQtyEl = document.getElementById('cartTotalQty');
+      if (totalQtyEl) totalQtyEl.textContent = totalUnitsCount;
+
+      if (cart.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; color: #94a3b8; padding-top: 60px;">
+            <div style="font-size: 36px; margin-bottom: 8px;">🛒</div>
+            <div style="font-weight: 500;">No items in cart</div>
+            <div style="font-size: 12px; margin-top: 4px;">Click an apparel card or scan barcode to add</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = '';
+      cart.forEach(item => {
+        const p = cachedProducts.find(prod => prod.id === item.productId);
+        if (!p) return;
+
+        const mrp = p.mrp || p.sellingPrice;
+        const perItemDiscount = mrp > p.sellingPrice ? (mrp - p.sellingPrice) * item.quantity : 0;
+
+        const row = document.createElement('div');
+        row.className = 'cart-row';
+        row.innerHTML = `
+          <div style="flex: 1;">
+            <div style="font-weight: 700; font-size: 13px; color: #0f172a;">${p.name}</div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">
+              <span class="product-tag">${p.size}</span>
+              <span class="product-tag">${p.color}</span>
+              <span>₹${p.sellingPrice.toFixed(2)} each</span>
+              ${perItemDiscount > 0 ? `<span style="color: #16a34a; font-weight: 600; margin-left: 4px;">(Saved ₹${perItemDiscount.toFixed(2)})</span>` : ''}
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <button class="btn btn-outline btn-sm" style="padding: 2px 8px; font-weight: bold;" onclick="changeQuantity('${p.id}', -1)">-</button>
+            <span style="font-weight: 700; font-size: 13px; min-width: 24px; text-align: center;">${item.quantity}</span>
+            <button class="btn btn-outline btn-sm" style="padding: 2px 8px; font-weight: bold;" onclick="changeQuantity('${p.id}', 1)">+</button>
+          </div>
+          <div style="text-align: right; min-width: 75px; margin-left: 10px;">
+            <div style="font-weight: 700; font-size: 13px; color: #0f172a;">₹${(p.sellingPrice * item.quantity).toFixed(2)}</div>
+            <button onclick="removeFromCart('${p.id}')" style="background:none; border:none; color:#ef4444; font-size:11px; cursor:pointer; padding: 2px 0;">Remove</button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function onDiscountPercentChange() {
+      updateCartSummary();
+    }
+
+    function onDiscountAmountChange() {
+      let subtotal = 0;
+      cart.forEach(item => {
+        const p = cachedProducts.find(prod => prod.id === item.productId);
+        if (p) subtotal += p.sellingPrice * item.quantity;
+      });
+
+      const discAmtInput = document.getElementById('discountAmountInput');
+      const discAmt = Math.max(Number(discAmtInput.value) || 0, 0);
+      const discPercent = subtotal > 0 ? Math.min(20, Math.round((discAmt / subtotal) * 100)) : 0;
+      
+      document.getElementById('discountInput').value = discPercent;
+      updateCartSummary();
+    }
+
+    function updateCartSummary() {
+      let totalQty = 0;
+      let subtotal = 0;
+      let tax = 0;
+
+      cart.forEach(item => {
+        const p = cachedProducts.find(prod => prod.id === item.productId);
+        if (p) {
+          totalQty += item.quantity;
+          const itemSub = p.sellingPrice * item.quantity;
+          subtotal += itemSub;
+          tax += (itemSub * (p.taxRate || 0)) / 100;
+        }
+      });
+
+      const totalQtyEl = document.getElementById('summaryTotalQty');
+      if (totalQtyEl) totalQtyEl.textContent = totalQty + ' pcs';
+
+      const discInput = document.getElementById('discountInput');
+      const discountPercent = Math.min(Math.max(Number(discInput.value) || 0, 0), 20);
+      const discountAmount = (subtotal * discountPercent) / 100;
+      const total = Math.max(0, subtotal - discountAmount + tax);
+
+      const dispDisc = document.getElementById('dispDiscountPercent');
+      if (dispDisc) dispDisc.textContent = discountPercent;
+
+      const dispTax = document.getElementById('dispTaxPercent');
+      if (dispTax) {
+        dispTax.textContent = subtotal > 0 ? ((tax / subtotal) * 100).toFixed(0) : 5;
+      }
+
+      document.getElementById('summarySubtotal').textContent = '₹' + subtotal.toFixed(2);
+      const discAmtEl = document.getElementById('summaryDiscountAmount');
+      if (discAmtEl) discAmtEl.textContent = '- ₹' + discountAmount.toFixed(2);
+
+      const discAmtInput = document.getElementById('discountAmountInput');
+      if (discAmtInput && document.activeElement !== discAmtInput) {
+        discAmtInput.value = discountAmount.toFixed(2);
+      }
+
+      document.getElementById('summaryTax').textContent = '+ ₹' + tax.toFixed(2);
+      document.getElementById('summaryTotal').textContent = '₹' + total.toFixed(2);
+
+      calculateChange();
+    }
+
+    function selectPaymentMethod(method, btn) {
+      selectedPayment = method;
+      document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('cashCalcArea').style.display = method === 'CASH' ? 'flex' : 'none';
+    }
+
+    function calculateChange() {
+      const totalText = document.getElementById('summaryTotal').textContent.replace('₹', '');
+      const total = parseFloat(totalText) || 0;
+      const tendered = parseFloat(document.getElementById('cashTendered').value) || 0;
+      const change = Math.max(0, tendered - total);
+      document.getElementById('changeReturnVal').textContent = '₹' + change.toFixed(2);
+    }
+
+    async function handleCheckout() {
+      if (cart.length === 0) {
+        showPosAlert('Please add garments to cart before completing sale.', 'error');
+        return;
+      }
+
+      const token = localStorage.getItem('rms_auth_token');
+      const discountPercent = Number(document.getElementById('discountInput').value) || 0;
+      const customerName = document.getElementById('custNameInput').value;
+      const customerMobile = document.getElementById('custMobileInput').value;
+
+      try {
+        const sale = await AppStore.createSale(token, cart, discountPercent, selectedPayment, customerName, customerMobile);
+        renderReceipt(sale);
+
+        // Reset cart and reload stock
+        cart = [];
+        document.getElementById('discountInput').value = 0;
+        document.getElementById('custNameInput').value = '';
+        document.getElementById('custMobileInput').value = '';
+        document.getElementById('cashTendered').value = '';
+        renderCart();
+        updateCartSummary();
+        await loadProducts();
+      } catch (err) {
+        showPosAlert(err.message, 'error');
+      }
+    }
+
+    function renderReceipt(sale) {
+      const modal = document.getElementById('receiptModal');
+      const content = document.getElementById('receiptContent');
+
+      let itemsHtml = '';
+      sale.items.forEach(i => {
+        itemsHtml += `
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span>${i.productName} (${i.size}) x${i.quantity}</span>
+            <span>₹${i.subtotal.toFixed(2)}</span>
+          </div>
+        `;
+      });
+
+      content.innerHTML = `
+        <div id="printableReceipt" style="text-align:center; padding: 8px;">
+          <h2 style="font-size: 16px; margin-bottom: 2px;">👔 READYMADE GARMENT SHOP</h2>
+          <p style="font-size: 11px; color:#475569;">123 Fashion Street, Retail Plaza<br>GSTIN: 27AABCR1234F1Z5 | Ph: +91 9876543210</p>
+          <hr style="border:none; border-top: 1px dashed #000; margin: 8px 0;">
+          
+          <div style="text-align:left; font-size:11px; margin-bottom: 8px;">
+            <div><strong>Invoice No:</strong> ${sale.invoiceNo}</div>
+            <div><strong>Date:</strong> ${new Date(sale.createdAt).toLocaleString()}</div>
+            <div><strong>Cashier:</strong> ${sale.cashierName}</div>
+            <div><strong>Customer:</strong> ${sale.customerName || 'Walk-in'}</div>
+            ${sale.customerMobile ? `<div><strong>Mobile (Masked):</strong> +91 ${sale.customerMobile}</div>` : ''}
+            <div><strong>Payment:</strong> ${sale.paymentMethod} (PAID)</div>
+          </div>
+          
+          <hr style="border:none; border-top: 1px dashed #000; margin: 8px 0;">
+          
+          <div style="text-align:left; font-size:11px;">
+            <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:4px; border-bottom: 1px solid #ddd; padding-bottom: 2px;">
+              <span>ITEMS & QTY</span>
+              <span>AMOUNT</span>
+            </div>
+            ${itemsHtml}
+          </div>
+          
+          <hr style="border:none; border-top: 1px dashed #000; margin: 8px 0;">
+          
+          <div style="text-align:left; font-size:11px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom: 3px; font-weight:600; color:#166534; background:#f0fdf4; padding:2px 4px; border-radius:3px;">
+              <span>Total Quantity:</span>
+              <span>${sale.items.reduce((acc, i) => acc + i.quantity, 0)} pcs (${sale.items.length} items)</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom: 3px;"><span>Items Subtotal:</span><span>₹${sale.subtotal.toFixed(2)}</span></div>
+            <div style="display:flex; justify-content:space-between; color:#ef4444; margin-bottom: 3px;">
+              <span>Discount (${sale.discountPercent}%):</span>
+              <span>-₹${sale.discountAmount.toFixed(2)}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; color:#475569; margin-bottom: 3px;">
+              <span>GST / Tax (5%):</span>
+              <span>+₹${sale.taxAmount.toFixed(2)}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:15px; margin-top:6px; border-top: 1px dashed #000; padding-top: 4px;">
+              <span>TOTAL AMOUNT:</span>
+              <span style="color: #059669;">₹${sale.totalAmount.toFixed(2)}</span>
+            </div>
+          </div>
+          
+          <hr style="border:none; border-top: 1px dashed #000; margin: 8px 0;">
+          <p style="font-size: 10px; margin-top: 6px;">Thank you for shopping with us!<br>Exchanges accepted within 7 days with this bill.</p>
+        </div>
+      `;
+
+      modal.classList.add('show');
+    }
+
+    function closeReceiptModal() {
+      document.getElementById('receiptModal').classList.remove('show');
+    }
+
+    async function openShiftSalesModal() {
+      const token = localStorage.getItem('rms_auth_token');
+      const sales = await AppStore.getMySales(token);
+      const tbody = document.getElementById('shiftTableBody');
+      tbody.innerHTML = '';
+
+      const totalRevenue = sales.reduce((acc, s) => acc + s.totalAmount, 0);
+      document.getElementById('shiftSummaryStats').innerHTML = `
+        <div style="flex:1; background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
+          <div style="font-size:11px; color:#64748b;">Total Bills</div>
+          <div style="font-size:18px; font-weight:bold;">${sales.length}</div>
+        </div>
+        <div style="flex:1; background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
+          <div style="font-size:11px; color:#64748b;">Session Total Collection</div>
+          <div style="font-size:18px; font-weight:bold; color:#059669;">₹${totalRevenue.toFixed(2)}</div>
+        </div>
+      `;
+
+      if (sales.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#64748b; padding:16px;">No bills generated during this session yet.</td></tr>`;
+      } else {
+        sales.forEach(s => {
+          tbody.innerHTML += `
+            <tr>
+              <td><strong>${s.invoiceNo}</strong></td>
+              <td>${new Date(s.createdAt).toLocaleTimeString()}</td>
+              <td><span class="product-tag">${s.paymentMethod}</span></td>
+              <td><strong>₹${s.totalAmount.toFixed(2)}</strong></td>
+            </tr>
+          `;
+        });
+      }
+
+      document.getElementById('shiftModal').classList.add('show');
+    }
+
+    function closeShiftModal() {
+      document.getElementById('shiftModal').classList.remove('show');
+    }
+
+    // ================= CASHIER MANAGEMENT SYSTEM =================
+
+    function openCashierManagementModal() {
+      document.getElementById('cshListAlert').className = 'alert';
+      renderCashiers();
+      document.getElementById('cashierManagementModal').classList.add('show');
+    }
+
+    function closeCashierManagementModal() {
+      document.getElementById('cashierManagementModal').classList.remove('show');
+    }
+
+    async function renderCashiers() {
+      const token = localStorage.getItem('rms_auth_token');
+      try {
+        const list = await AppStore.getCashiers(token);
+        const tbody = document.getElementById('cashiersTableBody');
+        tbody.innerHTML = '';
+        if (list.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#64748b; padding:16px;">No cashiers registered yet.</td></tr>';
+          return;
+        }
+        list.forEach(c => {
+          const isDeleted = c.status === 'DELETED';
+          if (isDeleted) return;
+          
+          let statusBadge = '';
+          if (c.status === 'ACTIVE') statusBadge = '<span class="role-badge cashier" style="background:#d1fae5; color:#059669;">Active</span>';
+          else if (c.status === 'INACTIVE') statusBadge = '<span class="role-badge" style="background:#f1f5f9; color:#475569;">Inactive</span>';
+          else statusBadge = '<span class="role-badge" style="background:#fee2e2; color:#dc2626;">Suspended</span>';
+
+          tbody.innerHTML += `
+            <tr>
+              <td><strong>${c.fullName}</strong></td>
+              <td><code>${c.employeeId}</code></td>
+              <td>@${c.username}</td>
+              <td>${statusBadge}</td>
+              <td style="font-size:11px;">${new Date(c.createdAt).toLocaleDateString()}</td>
+              <td>
+                <div style="display:flex; justify-content: flex-end; gap:6px;">
+                  <button class="btn btn-outline btn-sm" onclick="openEditCashierModal('${c.id}', '${c.fullName.replace(/'/g, "\\'")}', '${c.mobile}', '${c.email}')">✏️ Edit</button>
+                  <button class="btn btn-outline btn-sm" onclick="openResetPasswordModal('${c.id}', '${c.fullName.replace(/'/g, "\\'")}')">🔑 Reset</button>
+                  <select class="form-control" style="width:110px; padding:2px 6px; font-size:12px;" onchange="changeStatus('${c.id}', this.value)">
+                    <option value="ACTIVE" ${c.status === 'ACTIVE' ? 'selected' : ''}>Active</option>
+                    <option value="INACTIVE" ${c.status === 'INACTIVE' ? 'selected' : ''}>Inactive</option>
+                    <option value="SUSPENDED" ${c.status === 'SUSPENDED' ? 'selected' : ''}>Suspended</option>
+                  </select>
+                  <button class="btn btn-outline btn-sm" onclick="openCashierActivityModal('${c.id}')">📊 Activity</button>
+                  <button class="btn btn-outline btn-sm" style="color:#ef4444; border-color:#fee2e2;" onclick="deleteCashier('${c.id}')">🗑️ Delete</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        });
+      } catch (err) {
+        document.getElementById('cshListAlert').className = 'alert alert-error show';
+        document.getElementById('cshListAlert').innerHTML = `<span>⚠️</span> <div>${err.message}</div>`;
+      }
+    }
+
+    async function changeStatus(id, newStatus) {
+      const token = localStorage.getItem('rms_auth_token');
+      try {
+        await AppStore.updateCashierStatus(token, id, newStatus);
+        showToast('Cashier status updated successfully!');
+        renderCashiers();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function deleteCashier(id) {
+      if (!confirm('Are you sure you want to soft-delete this cashier account? This keeps sales history but blocks access.')) return;
+      const token = localStorage.getItem('rms_auth_token');
+      try {
+        await AppStore.deleteCashier(token, id);
+        showToast('Cashier account deleted.');
+        renderCashiers();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    function openRegisterCashierModal() {
+      document.getElementById('cshModalAlert').className = 'alert';
+      document.getElementById('registerCashierForm').reset();
+      document.getElementById('registerCashierModal').classList.add('show');
+    }
+
+    function closeRegisterCashierModal() {
+      document.getElementById('registerCashierModal').classList.remove('show');
+    }
+
+    document.getElementById('registerCashierForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = localStorage.getItem('rms_auth_token');
+      
+      const password = document.getElementById('cshPassword').value;
+      if (!SecurityEngine.isStrongPassword(password)) {
+        const alertBox = document.getElementById('cshModalAlert');
+        alertBox.className = 'alert alert-error show';
+        alertBox.innerHTML = `<span>⚠️</span> <div>Password must be at least 8 characters long and contain uppercase, lowercase, numbers, and special characters.</div>`;
+        return;
+      }
+
+      const data = {
+        fullName: document.getElementById('cshFullName').value,
+        employeeId: document.getElementById('cshEmployeeId').value,
+        username: document.getElementById('cshUsername').value,
+        mobile: document.getElementById('cshMobile').value,
+        email: document.getElementById('cshEmail').value,
+        password: password
+      };
+
+      try {
+        await AppStore.registerCashier(token, data);
+        closeRegisterCashierModal();
+        showToast('Cashier registered successfully!');
+        renderCashiers();
+      } catch (err) {
+        const alertBox = document.getElementById('cshModalAlert');
+        alertBox.className = 'alert alert-error show';
+        alertBox.innerHTML = `<span>⚠️</span> <div>${err.message}</div>`;
+      }
+    });
+
+    function openEditCashierModal(id, name, mobile, email) {
+      document.getElementById('editCashierId').value = id;
+      document.getElementById('editCshFullName').value = name;
+      document.getElementById('editCshMobile').value = mobile || '';
+      document.getElementById('editCshEmail').value = email || '';
+      document.getElementById('editCshModalAlert').className = 'alert';
+      document.getElementById('editCashierModal').classList.add('show');
+    }
+
+    function closeEditCashierModal() {
+      document.getElementById('editCashierModal').classList.remove('show');
+    }
+
+    document.getElementById('editCashierForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = localStorage.getItem('rms_auth_token');
+      const id = document.getElementById('editCashierId').value;
+      const data = {
+        fullName: document.getElementById('editCshFullName').value,
+        mobile: document.getElementById('editCshMobile').value,
+        email: document.getElementById('editCshEmail').value
+      };
+
+      try {
+        await AppStore.updateCashier(token, id, data);
+        closeEditCashierModal();
+        showToast('Cashier profile updated!');
+        renderCashiers();
+      } catch (err) {
+        const alertBox = document.getElementById('editCshModalAlert');
+        alertBox.className = 'alert alert-error show';
+        alertBox.innerHTML = `<span>⚠️</span> <div>${err.message}</div>`;
+      }
+    });
+
+    function openResetPasswordModal(id, name) {
+      document.getElementById('resetCashierId').value = id;
+      document.getElementById('resetCashierName').textContent = name;
+      document.getElementById('newPassword').value = '';
+      document.getElementById('resetPasswordModal').classList.add('show');
+    }
+
+    function closeResetPasswordModal() {
+      document.getElementById('resetPasswordModal').classList.remove('show');
+    }
+
+    document.getElementById('resetPasswordForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = localStorage.getItem('rms_auth_token');
+      const id = document.getElementById('resetCashierId').value;
+      const newPassword = document.getElementById('newPassword').value;
+
+      if (!SecurityEngine.isStrongPassword(newPassword)) {
+        alert('Password must be at least 8 characters long and contain uppercase, lowercase, numbers, and special characters.');
+        return;
+      }
+
+      try {
+        await AppStore.resetCashierPassword(token, id, newPassword);
+        closeResetPasswordModal();
+        showToast('Cashier password reset successfully.');
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    async function openCashierActivityModal(id) {
+      const token = localStorage.getItem('rms_auth_token');
+      try {
+        const res = await AppStore.getCashierActivity(token, id);
+        const summary = document.getElementById('cshActivitySummary');
+        summary.innerHTML = `
+          <div style="margin-bottom: 10px;"><strong>Cashier:</strong> ${res.cashier ? res.cashier.fullName : 'Staff'} (@${res.cashier ? res.cashier.username : ''})</div>
+          <div style="display:flex; gap:12px;">
+            <div style="flex:1; background:#f8fafc; padding:8px; border-radius:6px; border:1px solid #e2e8f0; font-size:12px;">
+              <div>Total Bills</div>
+              <strong>${res.totalSalesCount}</strong>
+            </div>
+            <div style="flex:1; background:#f8fafc; padding:8px; border-radius:6px; border:1px solid #e2e8f0; font-size:12px;">
+              <div>Revenue Generated</div>
+              <strong style="color:#059669;">₹${(res.totalRevenue || 0).toFixed(2)}</strong>
+            </div>
+          </div>
+        `;
+
+        const tbody = document.getElementById('cshActivitySalesBody');
+        tbody.innerHTML = '';
+        if (!res.sales || res.sales.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#64748b; padding:12px;">No sales history found for this cashier.</td></tr>';
+        } else {
+          res.sales.forEach(s => {
+            tbody.innerHTML += `
+              <tr>
+                <td><strong>${s.invoiceNo}</strong></td>
+                <td><strong>₹${s.totalAmount.toFixed(2)}</strong></td>
+                <td><span class="product-tag">${s.paymentMethod}</span></td>
+                <td style="font-size:11px;">${new Date(s.createdAt).toLocaleTimeString()}</td>
+              </tr>
+            `;
+          });
+        }
+
+        document.getElementById('cashierActivityModal').classList.add('show');
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    function closeCashierActivityModal() {
+      document.getElementById('cashierActivityModal').classList.remove('show');
+    }
+
+    // ================= PRODUCT REGISTRATION ENGINE =================
+
+    function openProductRegistrationModal() {
+      document.getElementById('prdRegAlert').className = 'alert';
+      document.getElementById('productRegisterForm').reset();
+      document.getElementById('regProductId').value = 'prd_' + Date.now().toString().slice(-6);
+      renderRegisteredProducts();
+      document.getElementById('productRegistrationModal').classList.add('show');
+    }
+
+    function closeProductRegistrationModal() {
+      document.getElementById('productRegistrationModal').classList.remove('show');
+      loadProducts();
+    }
+
+    function calculateRegSellingPrice() {
+      const mrp = parseFloat(document.getElementById('regProductMRP').value) || 0;
+      const disc = parseFloat(document.getElementById('regProductDiscount').value) || 0;
+      const selling = mrp - (mrp * disc / 100);
+      document.getElementById('regProductSellingPrice').value = selling.toFixed(2);
+    }
+
+    async function renderRegisteredProducts() {
+      const token = localStorage.getItem('rms_auth_token');
+      try {
+        const list = await AppStore.getProducts(token);
+        cachedProducts = list;
+        const grid = document.getElementById('regProductsGrid');
+        grid.innerHTML = '';
+        
+        const activeProducts = list.filter(p => p.isActive);
+        
+        if (activeProducts.length === 0) {
+          grid.innerHTML = `<div style="text-align: center; color: #64748b; padding: 40px;">No registered products found.</div>`;
+          return;
+        }
+        
+        activeProducts.forEach(p => {
+          const imgUrl = p.image || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=150';
+          const mrpVal = p.mrp || p.sellingPrice || 0;
+          const discVal = p.discount || 0;
+
+          const card = document.createElement('div');
+          card.className = 'product-card';
+          card.setAttribute('data-id', p.id);
+          card.innerHTML = `
+            <div class="product-card-img-wrapper">
+              <img src="${imgUrl}" alt="${p.name}" onerror="this.src='https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=150'">
+            </div>
+            <div class="product-card-body" style="padding: 12px; display: flex; flex-direction: column; gap: 4px;">
+              <div style="font-size: 13px; color: #334155; line-height: 1.4;">
+                <strong>Product Name:</strong> ${p.name}
+              </div>
+              <div style="font-size: 13px; color: #334155;">
+                <strong>Price:</strong> ₹${p.sellingPrice.toFixed(2)}
+              </div>
+              <div style="font-size: 13px; color: #334155;">
+                <strong>Quantity:</strong> ${p.stockQuantity}
+              </div>
+            </div>
+            <div class="product-card-actions" style="display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--border);">
+              <button type="button" class="card-action-btn edit-btn" onclick="openEditProductModal('${p.id}')" style="padding: 10px; font-weight: 700; font-size:12px;">Edit</button>
+              <button type="button" class="card-action-btn delete-btn" onclick="deactivateRegProduct('${p.id}')" style="padding: 10px; font-weight: 700; font-size:12px; border-left: 1px solid var(--border);">Delete</button>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+
+        attachCardContextMenu();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function deactivateRegProduct(id) {
+      if (!confirm('Are you sure you want to deactivate this product? It will be removed from POS billing.')) return;
+      const token = localStorage.getItem('rms_auth_token');
+      try {
+        await AppStore.deleteProduct(token, id);
+        showToast('Product deactivated successfully!');
+        renderRegisteredProducts();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    document.getElementById('regProductImageFile').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        document.getElementById('regProductImageBase64').value = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('productRegisterForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = localStorage.getItem('rms_auth_token');
+      const alertBox = document.getElementById('prdRegAlert');
+      alertBox.className = 'alert';
+
+      const data = {
+        productId: document.getElementById('regProductId').value,
+        name: document.getElementById('regProductName').value,
+        description: document.getElementById('regProductDesc').value,
+        image: document.getElementById('regProductImageBase64').value || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=150',
+        stock: document.getElementById('regProductStock').value,
+        quantity: document.getElementById('regProductQty').value,
+        mrp: document.getElementById('regProductMRP').value,
+        discount: document.getElementById('regProductDiscount').value,
+        sellingPrice: document.getElementById('regProductSellingPrice').value,
+        gst: document.getElementById('regProductGST').value,
+        category: document.getElementById('regProductCategory').value,
+        size: document.getElementById('regProductSize').value.split('/')[0] || 'Free Size',
+        color: document.getElementById('regProductSize').value.split('/')[1] || 'Neutral',
+      };
+
+      try {
+        await AppStore.createProduct(token, data);
+        alertBox.className = 'alert alert-success show';
+        alertBox.innerHTML = `<span>✅</span> <div>Product registered successfully!</div>`;
+        document.getElementById('productRegisterForm').reset();
+        document.getElementById('regProductImageBase64').value = '';
+        document.getElementById('regProductId').value = 'prd_' + Date.now().toString().slice(-6);
+        renderRegisteredProducts();
+        setTimeout(() => { alertBox.className = 'alert'; }, 3000);
+      } catch (err) {
+        alertBox.className = 'alert alert-error show';
+        alertBox.innerHTML = `<span>⚠️</span> <div>${err.message}</div>`;
+      }
+    });
+
+    // ================= EDIT PRODUCT & ADJUST STOCK MODALS CONTROLLERS =================
+
+    function openEditProductModal(productId) {
+      const p = cachedProducts.find(prod => prod.id === productId);
+      if (!p) {
+        alert('Product details not found in cache.');
+        return;
+      }
+      
+      document.getElementById('editPrdAlert').className = 'alert';
+      document.getElementById('editProductForm').reset();
+      
+      document.getElementById('editProdId').value = p.id;
+      document.getElementById('editProdName').value = p.name || '';
+      document.getElementById('editProdDesc').value = p.description || '';
+      document.getElementById('editProdImageBase64').value = p.image || '';
+      document.getElementById('editProdStock').value = p.stockQuantity || 0;
+      document.getElementById('editProdQty').value = p.quantity || '1 piece';
+      document.getElementById('editProdGST').value = p.taxRate || p.gst || 5;
+      document.getElementById('editProdMRP').value = p.mrp || p.sellingPrice || 0;
+      document.getElementById('editProdDiscount').value = p.discount || 0;
+      document.getElementById('editProdSellingPrice').value = p.sellingPrice || 0;
+      document.getElementById('editProdCategory').value = p.category || 'General';
+      document.getElementById('editProdSize').value = `${p.size || 'Free Size'}/${p.color || 'Neutral'}`;
+
+      document.getElementById('editProductModal').classList.add('show');
+    }
+
+    function closeEditProductModal() {
+      document.getElementById('editProductModal').classList.remove('show');
+    }
+
+    function calculateEditSellingPrice() {
+      const mrp = parseFloat(document.getElementById('editProdMRP').value) || 0;
+      const disc = parseFloat(document.getElementById('editProdDiscount').value) || 0;
+      const selling = mrp - (mrp * disc / 100);
+      document.getElementById('editProdSellingPrice').value = selling.toFixed(2);
+    }
+
+    document.getElementById('editProdImageFile').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        document.getElementById('editProdImageBase64').value = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('editProductForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = localStorage.getItem('rms_auth_token');
+      const alertBox = document.getElementById('editPrdAlert');
+      alertBox.className = 'alert';
+      const id = document.getElementById('editProdId').value;
+
+      const data = {
+        name: document.getElementById('editProdName').value,
+        description: document.getElementById('editProdDesc').value,
+        image: document.getElementById('editProdImageBase64').value,
+        stockQuantity: Number(document.getElementById('editProdStock').value),
+        quantity: document.getElementById('editProdQty').value,
+        gst: Number(document.getElementById('editProdGST').value),
+        mrp: Number(document.getElementById('editProdMRP').value),
+        discount: Number(document.getElementById('editProdDiscount').value),
+        sellingPrice: Number(document.getElementById('editProdSellingPrice').value),
+        category: document.getElementById('editProdCategory').value,
+        size: document.getElementById('editProdSize').value.split('/')[0] || 'Free Size',
+        color: document.getElementById('editProdSize').value.split('/')[1] || 'Neutral',
+      };
+
+      try {
+        await AppStore.updateProduct(token, id, data);
+        alertBox.className = 'alert alert-success show';
+        alertBox.innerHTML = `<span>✅</span> <div>Product updated successfully!</div>`;
+        setTimeout(() => {
+          closeEditProductModal();
+          renderRegisteredProducts();
+          loadProducts(); // Refresh POS grid
+        }, 1200);
+      } catch (err) {
+        alertBox.className = 'alert alert-error show';
+        alertBox.innerHTML = `<span>⚠️</span> <div>${err.message}</div>`;
+      }
+    });
+
+    function openAdjustStockModal(productId, productName, currentStock) {
+      document.getElementById('adjRegAlert').className = 'alert';
+      document.getElementById('adjustStockForm').reset();
+      document.getElementById('adjProductId').value = productId;
+      document.getElementById('adjProductNameDisplay').textContent = productName;
+      document.getElementById('adjCurrentStockDisplay').textContent = currentStock;
+      document.getElementById('adjustStockModal').classList.add('show');
+    }
+
+    function closeAdjustStockModal() {
+      document.getElementById('adjustStockModal').classList.remove('show');
+    }
+
+    document.getElementById('adjustStockForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = localStorage.getItem('rms_auth_token');
+      const alertBox = document.getElementById('adjRegAlert');
+      alertBox.className = 'alert';
+
+      const data = {
+        productId: document.getElementById('adjProductId').value,
+        type: document.getElementById('adjType').value,
+        quantity: Number(document.getElementById('adjQty').value),
+        reason: document.getElementById('adjReason').value
+      };
+
+      try {
+        await AppStore.adjustStock(token, data);
+        alertBox.className = 'alert alert-success show';
+        alertBox.innerHTML = `<span>✅</span> <div>Stock adjusted successfully!</div>`;
+        setTimeout(() => {
+          closeAdjustStockModal();
+          renderRegisteredProducts();
+          loadProducts(); // Refresh POS grid
+        }, 1200);
+      } catch (err) {
+        alertBox.className = 'alert alert-error show';
+        alertBox.innerHTML = `<span>⚠️</span> <div>${err.message}</div>`;
+      }
+    });
+
+    // ================= GLOBAL EVENT HANDLERS & INITS =================
+
+    document.getElementById('barcodeSearch').addEventListener('input', renderProductGrid);
+    document.getElementById('categoryFilter').addEventListener('change', renderProductGrid);
+
+    // Auto-add on enter if exact barcode scanned
+    document.getElementById('barcodeSearch').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const val = e.target.value.trim();
+        const product = cachedProducts.find(p => p.barcode === val || p.sku.toLowerCase() === val.toLowerCase());
+        if (product) {
+          addToCart(product);
+          e.target.value = '';
+          renderProductGrid();
+        }
+      }
+    });
+
+    async function loadCategories() {
+      const token = localStorage.getItem('rms_auth_token');
+      try {
+        const cats = await AppStore.getCategories(token);
+        
+        // POS filter dropdown
+        const selFilter = document.getElementById('categoryFilter');
+        if (selFilter) {
+          selFilter.innerHTML = '<option value="ALL">All Categories</option>' +
+            cats.map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+
+        // Registration form dropdown
+        const selReg = document.getElementById('regProductCategory');
+        if (selReg) {
+          selReg.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+          if (cats.includes('General')) selReg.value = 'General';
+        }
+
+        // Edit form dropdown
+        const selEdit = document.getElementById('editProdCategory');
+        if (selEdit) {
+          selEdit.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+      } catch (err) {
+        console.error('Failed to load categories', err);
+      }
+    }
+
+    function logout() {
+      SecurityEngine.clearSession();
+      window.location.href = '../admin-login.html';
+    }
+
+    // ================= STOCK REPORT MODAL CONTROLLERS =================
+    async function openStockReportModal() {
+      const token = localStorage.getItem('rms_auth_token');
+      try {
+        const cats = await AppStore.getCategories(token);
+        const sel = document.getElementById('rptCategory');
+        sel.innerHTML = '<option value="ALL">All Categories</option>' +
+          cats.map(c => `<option value="${c}">${c}</option>`).join('');
+      } catch (err) {
+        console.error(err);
+      }
+
+      document.getElementById('rptStockLevel').value = 'ALL';
+      document.getElementById('rptCategory').value = 'ALL';
+
+      renderStockReport();
+      document.getElementById('stockReportModal').classList.add('show');
+    }
+
+    function closeStockReportModal() {
+      document.getElementById('stockReportModal').classList.remove('show');
+    }
+
+    function renderStockReport() {
+      const categoryFilter = document.getElementById('rptCategory').value;
+      const stockFilter = document.getElementById('rptStockLevel').value;
+      const tbody = document.getElementById('rptValuationTableBody');
+      tbody.innerHTML = '';
+
+      let totalProducts = 0;
+      let totalStock = 0;
+      let totalMRPValue = 0;
+      let totalSellingValue = 0;
+
+      const activeProducts = cachedProducts.filter(p => p.isActive);
+
+      const filtered = activeProducts.filter(p => {
+        const matchesCat = categoryFilter === 'ALL' || p.category === categoryFilter;
+        let matchesStock = true;
+        if (stockFilter === 'INSTOCK') {
+          matchesStock = p.stockQuantity >= 5;
+        } else if (stockFilter === 'LOWSTOCK') {
+          matchesStock = p.stockQuantity > 0 && p.stockQuantity < 5;
+        } else if (stockFilter === 'OUTOFSTOCK') {
+          matchesStock = p.stockQuantity === 0;
+        }
+        return matchesCat && matchesStock;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#64748b; padding:16px;">No products match the selected criteria.</td></tr>';
+        document.getElementById('rptTotalProducts').textContent = '0';
+        document.getElementById('rptTotalStock').textContent = '0';
+        document.getElementById('rptTotalMRP').textContent = '₹0.00';
+        document.getElementById('rptTotalSelling').textContent = '₹0.00';
+        return;
+      }
+
+      filtered.forEach(p => {
+        const mrp = p.mrp || p.sellingPrice || 0;
+        const selling = p.sellingPrice || 0;
+        const qty = p.stockQuantity || 0;
+
+        const valMRP = qty * mrp;
+        const valSelling = qty * selling;
+
+        totalProducts++;
+        totalStock += qty;
+        totalMRPValue += valMRP;
+        totalSellingValue += valSelling;
+
+        let statusBadge = '';
+        if (qty === 0) {
+          statusBadge = '<span class="status-badge" style="background:#374151; color:#fff; display:inline-block; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:700;">Outstock</span>';
+        } else if (qty < 5) {
+          statusBadge = '<span class="status-badge" style="background:#fee2e2; color:#991b1b; display:inline-block; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:700;">Low Stock (' + qty + ')</span>';
+        } else {
+          statusBadge = '<span class="status-badge" style="background:#d1fae5; color:#065f46; display:inline-block; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:700;">In Stock (' + qty + ')</span>';
+        }
+
+        tbody.innerHTML += `
+          <tr>
+            <td><code>${p.id}</code></td>
+            <td>
+              <strong>${p.name}</strong><br>
+              <small style="color:var(--text-muted);">${p.size || 'Free Size'} / ${p.color || 'Neutral'}</small>
+            </td>
+            <td>${p.category || 'General'}</td>
+            <td>₹${mrp.toFixed(2)}</td>
+            <td>₹${selling.toFixed(2)}</td>
+            <td style="font-weight: 700; text-align: center;">${qty}</td>
+            <td>${statusBadge}</td>
+            <td style="font-weight: 600;">₹${valMRP.toFixed(2)}</td>
+            <td style="font-weight: 600;">₹${valSelling.toFixed(2)}</td>
+          </tr>
+        `;
+      });
+
+      document.getElementById('rptTotalProducts').textContent = totalProducts;
+      document.getElementById('rptTotalStock').textContent = totalStock;
+      document.getElementById('rptTotalMRP').textContent = '₹' + totalMRPValue.toFixed(2);
+      document.getElementById('rptTotalSelling').textContent = '₹' + totalSellingValue.toFixed(2);
+    }
+
+    function printStockReportModal() {
+      window.print();
+    }
+
+    // Bind report change events
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('rptCategory').addEventListener('change', renderStockReport);
+      document.getElementById('rptStockLevel').addEventListener('change', renderStockReport);
+    });
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await AppStore.init();
+      await loadCategories();
+      await loadProducts();
+    });
+  </script>
+  <!-- Custom Context Menu for Right-Click -->
+  <div id="customContextMenu" class="context-menu">
+    <div class="context-menu-item" id="ctxEditBtn">✏️ Edit Product Details</div>
+    <div class="context-menu-item" id="ctxStockBtn">📦 Adjust Product Stock</div>
+    <div class="context-menu-item delete" id="ctxDeleteBtn">🗑️ Deactivate Product</div>
+  </div>
+
+</body>
+</html>
